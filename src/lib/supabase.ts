@@ -1,11 +1,41 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Read Vite-prefixed environment variables at build time
-const rawUrl = import.meta.env.VITE_SUPABASE_URL;
-const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// 1. Temporary debug logs requested to inspect raw values at initialization time
+console.log('[DEBUG] Supabase URL:', JSON.stringify(import.meta.env.VITE_SUPABASE_URL));
+console.log('[DEBUG] Supabase Anon Key length:', import.meta.env.VITE_SUPABASE_ANON_KEY?.length);
 
-export const supabaseUrl: string = (typeof rawUrl === 'string' ? rawUrl : '').trim();
-export const supabaseAnonKey: string = (typeof rawKey === 'string' ? rawKey : '').trim();
+/**
+ * Defensively cleans and sanitizes the Supabase URL.
+ * Handles:
+ * - Hidden whitespace, newlines, and tabs
+ * - Surrounding quotes ("..." or '...')
+ * - Trailing slashes (https://xyz.supabase.co/ -> https://xyz.supabase.co)
+ * - Accidental subpaths (/rest/v1, /auth/v1) which cause GoTrue to produce:
+ *   "Invalid path specified in request URL"
+ */
+function sanitizeSupabaseUrl(raw: any): string {
+  if (!raw || typeof raw !== 'string') return '';
+  let clean = raw.trim().replace(/^["'`]+|["'`]+$/g, '').trim();
+  try {
+    const parsed = new URL(clean);
+    // If the path contains /rest or /auth, user copied the REST endpoint instead of Project URL
+    if (parsed.pathname.includes('/rest') || parsed.pathname.includes('/auth')) {
+      console.warn('[Supabase Configuration] Detected subpath in VITE_SUPABASE_URL. Normalizing to origin:', parsed.origin);
+      return parsed.origin;
+    }
+    return clean.replace(/\/+$/, '');
+  } catch {
+    return clean.replace(/\/+$/, '');
+  }
+}
+
+function sanitizeSupabaseKey(raw: any): string {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw.trim().replace(/^["'`]+|["'`]+$/g, '').trim();
+}
+
+export const supabaseUrl: string = sanitizeSupabaseUrl(import.meta.env.VITE_SUPABASE_URL);
+export const supabaseAnonKey: string = sanitizeSupabaseKey(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 /**
  * Validates whether Supabase environment variables are properly defined and valid
@@ -31,54 +61,23 @@ if (!isSupabaseConfigured()) {
     '[Supabase Configuration] ⚠️ Supabase environment variables are missing or invalid!\n' +
     `- VITE_SUPABASE_URL: ${supabaseUrl ? `"${supabaseUrl}"` : '(undefined / empty)'}\n` +
     `- VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? '(present but may be placeholder)' : '(undefined / empty)'}\n` +
-    'Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your hosting environment settings and trigger a fresh build.'
+    'Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your hosting environment settings.'
   );
+} else {
+  console.log('[DEBUG] Sanitized Supabase URL in use:', JSON.stringify(supabaseUrl));
 }
 
-/**
- * Asserts that Supabase is configured; throws a clear error if missing
- */
-export const assertSupabaseConfigured = (): void => {
-  if (!isSupabaseConfigured()) {
-    const errorMsg =
-      'Supabase কনফিগারেশন পাওয়া যাচ্ছে না। এনভায়রনমেন্ট ভেরিয়েবল VITE_SUPABASE_URL এবং VITE_SUPABASE_ANON_KEY সঠিকভাবে সেট করা হয়েছে কিনা যাচাই করুন।';
-    console.error(`[Supabase Error] ${errorMsg}`);
-    throw new Error(errorMsg);
-  }
-};
+// 2. Official createClient initialization with NO custom path wrappers
+const activeUrl = isSupabaseConfigured() ? supabaseUrl : 'https://missing-supabase-url.supabase.co';
+const activeKey = isSupabaseConfigured() ? supabaseAnonKey : 'missing-supabase-anon-key';
 
-// Internal raw client instance
-const internalClient: SupabaseClient = createClient(
-  isSupabaseConfigured() ? supabaseUrl : 'https://missing-supabase-url.supabase.co',
-  isSupabaseConfigured() ? supabaseAnonKey : 'missing-supabase-anon-key',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storageKey: 'majumdar_khamar_auth_session'
-    }
-  }
-);
-
-/**
- * Guarded Supabase Client Proxy
- * If Supabase is not configured, calling database methods throws a clear catchable Error
- * instead of failing mysteriously with broken network calls to placeholder domains.
- */
-export const supabase: SupabaseClient = new Proxy(internalClient, {
-  get(target, prop, receiver) {
-    // Methods that require active database connection
-    if (['from', 'rpc', 'storage'].includes(String(prop))) {
-      if (!isSupabaseConfigured()) {
-        assertSupabaseConfigured();
-      }
-    }
-    const val = Reflect.get(target, prop, receiver);
-    if (typeof val === 'function') {
-      return val.bind(target);
-    }
-    return val;
+export const supabase: SupabaseClient = createClient(activeUrl, activeKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'majumdar_khamar_auth_session'
   }
 });
+
 
