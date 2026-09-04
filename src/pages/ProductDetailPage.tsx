@@ -46,6 +46,18 @@ export const ProductDetailPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [slug]);
 
+  // Related products for "আরও দেখুন" (3 other sale products)
+  const relatedProducts = useMemo(() => {
+    if (!currentProduct) return [];
+    const others = saleProducts.filter(
+      (p) => p.id !== currentProduct.id && p.slug !== currentProduct.slug && p.name !== currentProduct.name
+    );
+    const sameCategory = others.filter((p) => p.category === currentProduct.category);
+    const differentCategory = others.filter((p) => p.category !== currentProduct.category);
+    const combined = [...sameCategory, ...differentCategory];
+    return combined.slice(0, 3);
+  }, [saleProducts, currentProduct]);
+
   // If loading is finished and no product is found, redirect to /sale-products
   if (!loading && !currentProduct) {
     return <Navigate to="/sale-products" replace />;
@@ -62,18 +74,6 @@ export const ProductDetailPage: React.FC = () => {
       </div>
     );
   }
-
-  // Related products for "আরও দেখুন" (3 other sale products)
-  const relatedProducts = useMemo(() => {
-    if (!currentProduct) return [];
-    const others = saleProducts.filter(
-      (p) => p.id !== currentProduct.id && p.slug !== currentProduct.slug && p.name !== currentProduct.name
-    );
-    const sameCategory = others.filter((p) => p.category === currentProduct.category);
-    const differentCategory = others.filter((p) => p.category !== currentProduct.category);
-    const combined = [...sameCategory, ...differentCategory];
-    return combined.slice(0, 3);
-  }, [saleProducts, currentProduct]);
 
   const imagesList = currentProduct.images && currentProduct.images.length > 0
     ? currentProduct.images

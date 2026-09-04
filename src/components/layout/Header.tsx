@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, MessageCircle, Phone, MapPin, ChevronRight } from 'lucide-react';
+import { Menu, X, MessageCircle, Phone, MapPin, ChevronRight, Home, Package, ShoppingBag } from 'lucide-react';
 import { CowLogo } from '../ui/CowLogo';
 import { useSiteContent } from '../../context/SiteContentContext';
 
@@ -258,6 +258,87 @@ export const Header: React.FC = () => {
           </>
         )}
       </AnimatePresence>
+
+      {/* Mobile Fixed Bottom Navigation Bar (< 768px / md:hidden) */}
+      <nav
+        id="public-mobile-bottom-nav"
+        aria-label="মোবাইল নেভিগেশন"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] flex justify-around items-center px-1 py-1"
+        style={{ paddingBottom: 'max(0.35rem, env(safe-area-inset-bottom, 0px))' }}
+      >
+        {/* 1. হোম */}
+        <Link
+          to="/"
+          id="mobile-nav-tab-home"
+          onClick={() => setMobileMenuOpen(false)}
+          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all min-h-[48px] min-w-[62px] ${
+            location.pathname === '/'
+              ? 'text-[#003F2D] bg-emerald-50/90 font-bold scale-105'
+              : 'text-gray-500 hover:text-gray-900 active:bg-gray-100 font-medium'
+          }`}
+        >
+          <Home className={`w-5 h-5 mb-0.5 shrink-0 ${location.pathname === '/' ? 'stroke-[2.5]' : 'stroke-2'}`} />
+          <span className="text-[11px] leading-tight">হোম</span>
+        </Link>
+
+        {/* 2. প্রোডাক্টস */}
+        <Link
+          to="/products"
+          id="mobile-nav-tab-products"
+          onClick={() => setMobileMenuOpen(false)}
+          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all min-h-[48px] min-w-[62px] ${
+            location.pathname.startsWith('/products')
+              ? 'text-[#003F2D] bg-emerald-50/90 font-bold scale-105'
+              : 'text-gray-500 hover:text-gray-900 active:bg-gray-100 font-medium'
+          }`}
+        >
+          <Package className={`w-5 h-5 mb-0.5 shrink-0 ${location.pathname.startsWith('/products') ? 'stroke-[2.5]' : 'stroke-2'}`} />
+          <span className="text-[11px] leading-tight">প্রোডাক্টস</span>
+        </Link>
+
+        {/* 3. বিক্রয় পণ্য */}
+        <Link
+          to="/sale-products"
+          id="mobile-nav-tab-sale-products"
+          onClick={() => setMobileMenuOpen(false)}
+          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all min-h-[48px] min-w-[62px] ${
+            location.pathname.startsWith('/sale-products') || location.pathname.startsWith('/sales')
+              ? 'text-[#003F2D] bg-emerald-50/90 font-bold scale-105'
+              : 'text-gray-500 hover:text-gray-900 active:bg-gray-100 font-medium'
+          }`}
+        >
+          <ShoppingBag
+            className={`w-5 h-5 mb-0.5 shrink-0 ${
+              location.pathname.startsWith('/sale-products') || location.pathname.startsWith('/sales')
+                ? 'stroke-[2.5]'
+                : 'stroke-2'
+            }`}
+          />
+          <span className="text-[11px] leading-tight">বিক্রয় পণ্য</span>
+        </Link>
+
+        {/* 4. মেনু */}
+        <button
+          type="button"
+          id="mobile-nav-tab-menu"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all min-h-[48px] min-w-[62px] cursor-pointer ${
+            mobileMenuOpen || location.pathname === '/about' || location.pathname === '/contact'
+              ? 'text-[#003F2D] bg-emerald-50/90 font-bold scale-105'
+              : 'text-gray-500 hover:text-gray-900 active:bg-gray-100 font-medium'
+          }`}
+          aria-label="মোবাইল মেনু খুলুন"
+        >
+          <Menu
+            className={`w-5 h-5 mb-0.5 shrink-0 ${
+              mobileMenuOpen || location.pathname === '/about' || location.pathname === '/contact'
+                ? 'stroke-[2.5]'
+                : 'stroke-2'
+            }`}
+          />
+          <span className="text-[11px] leading-tight">মেনু</span>
+        </button>
+      </nav>
     </>
   );
 };

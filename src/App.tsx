@@ -49,7 +49,7 @@ function PublicLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f5efe0] text-[#1a3a2a] selection:bg-[#c0522d] selection:text-white relative">
       <Header />
-      <main className="flex-grow flex flex-col">
+      <main className="flex-grow flex flex-col pb-20 md:pb-0">
         <Outlet />
       </main>
       <Footer />

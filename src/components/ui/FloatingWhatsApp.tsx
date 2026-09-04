@@ -14,7 +14,7 @@ export const FloatingWhatsApp: React.FC = () => {
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 0.8, type: 'spring', stiffness: 260, damping: 20 }}
-      className="fixed bottom-6 right-6 z-40 flex items-center group"
+      className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-4 md:bottom-6 md:right-6 z-40 flex items-center group"
     >
       {/* Tooltip on hover */}
       <span className="hidden md:inline-block mr-3 px-3 py-1.5 rounded-lg bg-[#1a3a2a] text-white text-xs font-semibold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap border border-white/10">

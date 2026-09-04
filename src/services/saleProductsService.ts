@@ -1,11 +1,16 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { SaleProduct, ProductCategory } from '../types/product';
 import { initialSaleProducts } from '../data/seedSaleProducts';
+import { getDemoImagesForProduct } from '../data/demoImages';
 
 /**
  * Maps a Supabase row (snake_case) to the TypeScript SaleProduct interface (camelCase)
  */
 export function mapDbToSaleProduct(row: any): SaleProduct {
+  const images = Array.isArray(row.images) && row.images.length > 0
+    ? row.images
+    : getDemoImagesForProduct(row.slug || row.id, row.name);
+
   return {
     id: row.id,
     name: row.name || '',
@@ -17,7 +22,7 @@ export function mapDbToSaleProduct(row: any): SaleProduct {
     gender: row.gender || 'পুরুষ',
     healthStatus: row.health_status || 'সুস্থ, নিয়মিত টিকা প্রাপ্ত',
     description: row.description || '',
-    images: Array.isArray(row.images) ? row.images : [],
+    images,
     inStock: typeof row.in_stock === 'boolean' ? row.in_stock : true,
     isLimited: typeof row.is_limited === 'boolean' ? row.is_limited : false,
     slug: row.slug || '',

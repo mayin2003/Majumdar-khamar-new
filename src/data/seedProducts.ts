@@ -1,21 +1,5 @@
 import { Product, SaleProduct } from '../types/product';
-
-import deshiCalfImg from '../assets/images/sales_deshi_calf_1788283088980.jpg';
-import calfAngle2Img from '../assets/images/sales_calf_angle2_1788328647040.jpg';
-import calfAngle3Img from '../assets/images/sales_calf_angle3_1788328662947.jpg';
-import sahiwalCowImg from '../assets/images/sales_sahiwal_cow_1788283112846.jpg';
-import sahiwalCalfImg from '../assets/images/sales_shahiwal_calf_1788328682412.jpg';
-import blackBengalGoatImg from '../assets/images/sales_black_bengal_1788283142437.jpg';
-import jamunapariGoatImg from '../assets/images/sales_jamunapari_goat_1788283166390.jpg';
-import sonaliHenImg from '../assets/images/sales_sonali_hen_1788283193947.jpg';
-import deshiDuckImg from '../assets/images/sales_deshi_duck_1788283216432.jpg';
-import friesianCalfImg from '../assets/images/sales_friesian_calf_1788283238182.jpg';
-import deshiHenImg from '../assets/images/sales_deshi_hen_1788283263135.jpg';
-import totapuriGoatImg from '../assets/images/sales_totapuri_goat_1788283286988.jpg';
-import bolodCalfImg from '../assets/images/sales_bolod_bachur_1788328702237.jpg';
-import cowLandscapeImg from '../assets/images/products_cow_landscape_1788280718661.jpg';
-import goatLandscapeImg from '../assets/images/products_goat_landscape_1788280739621.jpg';
-import poultryLandscapeImg from '../assets/images/products_poultry_landscape_1788280758135.jpg';
+import { DEMO_BREED_IMAGES } from './demoImages';
 
 // Informational-Only products (no price, no forSale)
 export const initialProducts: Product[] = [
@@ -28,7 +12,7 @@ export const initialProducts: Product[] = [
     breed: "দেশি",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [deshiCalfImg, calfAngle2Img, calfAngle3Img],
+    images: [...DEMO_BREED_IMAGES.deshiCalf],
     inStock: true,
     isLimited: false,
     slug: "deshi-bachur-1",
@@ -45,7 +29,7 @@ export const initialProducts: Product[] = [
     breed: "দেশি",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [deshiCalfImg, calfAngle2Img, calfAngle3Img],
+    images: [...DEMO_BREED_IMAGES.deshiCalf],
     inStock: true,
     isLimited: false,
     slug: "deshi-bachur",
@@ -62,7 +46,7 @@ export const initialProducts: Product[] = [
     breed: "দেশি",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [bolodCalfImg, deshiCalfImg, calfAngle2Img],
+    images: [...DEMO_BREED_IMAGES.deshiBolod],
     inStock: true,
     isLimited: false,
     slug: "deshi-bolod-bachur",
@@ -79,7 +63,7 @@ export const initialProducts: Product[] = [
     breed: "শাহিওয়াল",
     gender: "স্ত্রী",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [sahiwalCowImg, sahiwalCalfImg, cowLandscapeImg],
+    images: [...DEMO_BREED_IMAGES.sahiwalCow],
     inStock: true,
     isLimited: false,
     slug: "shahiwal-gabhi",
@@ -96,7 +80,7 @@ export const initialProducts: Product[] = [
     breed: "ফ্রিজিয়ান ক্রস",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [friesianCalfImg, deshiCalfImg, sahiwalCalfImg],
+    images: [...DEMO_BREED_IMAGES.friesianCross],
     inStock: true,
     isLimited: false,
     slug: "friesian-cross-bachur",
@@ -113,7 +97,7 @@ export const initialProducts: Product[] = [
     breed: "শাহীওয়াল",
     gender: "পুরুষ",
     healthStatus: "সুস্থ ও প্রজনন সনদপ্রাপ্ত",
-    images: [cowLandscapeImg, sahiwalCowImg],
+    images: [...DEMO_BREED_IMAGES.breedingSahiwalBull],
     inStock: true,
     isLimited: false,
     slug: "breeding-sahiwal-bull",
@@ -130,7 +114,7 @@ export const initialProducts: Product[] = [
     breed: "ব্ল্যাক বেঙ্গল",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [blackBengalGoatImg, totapuriGoatImg, jamunapariGoatImg],
+    images: [...DEMO_BREED_IMAGES.blackBengalGoat],
     inStock: true,
     isLimited: false,
     slug: "black-bengal-chagol",
@@ -147,7 +131,7 @@ export const initialProducts: Product[] = [
     breed: "যমুনাপারি",
     gender: "স্ত্রী",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [jamunapariGoatImg, totapuriGoatImg, goatLandscapeImg],
+    images: [...DEMO_BREED_IMAGES.jamunapariGoat],
     inStock: true,
     isLimited: true,
     slug: "jamunapari-chagol",
@@ -164,7 +148,7 @@ export const initialProducts: Product[] = [
     breed: "তোতাপারি",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [totapuriGoatImg, jamunapariGoatImg, blackBengalGoatImg],
+    images: [...DEMO_BREED_IMAGES.totapuriGoat],
     inStock: true,
     isLimited: false,
     slug: "totapuri-chagol",
@@ -181,7 +165,7 @@ export const initialProducts: Product[] = [
     breed: "সোনালী",
     gender: "স্ত্রী",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [sonaliHenImg, deshiHenImg, poultryLandscapeImg],
+    images: [...DEMO_BREED_IMAGES.sonaliChicken],
     inStock: true,
     isLimited: false,
     slug: "sonali-murgi",
@@ -198,7 +182,7 @@ export const initialProducts: Product[] = [
     breed: "দেশি",
     gender: "মিশ্র",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [deshiDuckImg, sonaliHenImg, poultryLandscapeImg],
+    images: [...DEMO_BREED_IMAGES.deshiDuck],
     inStock: true,
     isLimited: false,
     slug: "deshi-hnas",
@@ -220,7 +204,7 @@ export const initialSaleProducts: SaleProduct[] = [
     breed: "দেশি",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [deshiCalfImg, calfAngle2Img, calfAngle3Img],
+    images: [...DEMO_BREED_IMAGES.deshiCalf],
     inStock: true,
     isLimited: false,
     slug: "deshi-bachur-1",
@@ -238,7 +222,7 @@ export const initialSaleProducts: SaleProduct[] = [
     breed: "দেশি",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [bolodCalfImg, deshiCalfImg, calfAngle2Img],
+    images: [...DEMO_BREED_IMAGES.deshiBolod],
     inStock: true,
     isLimited: false,
     slug: "deshi-bolod-bachur",
@@ -256,7 +240,7 @@ export const initialSaleProducts: SaleProduct[] = [
     breed: "শাহিওয়াল",
     gender: "স্ত্রী",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [sahiwalCowImg, sahiwalCalfImg, cowLandscapeImg],
+    images: [...DEMO_BREED_IMAGES.sahiwalCow],
     inStock: true,
     isLimited: false,
     slug: "shahiwal-gabhi",
@@ -274,7 +258,7 @@ export const initialSaleProducts: SaleProduct[] = [
     breed: "ফ্রিজিয়ান ক্রস",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [friesianCalfImg, deshiCalfImg, sahiwalCalfImg],
+    images: [...DEMO_BREED_IMAGES.friesianCross],
     inStock: true,
     isLimited: false,
     slug: "friesian-cross-bachur",
@@ -292,7 +276,7 @@ export const initialSaleProducts: SaleProduct[] = [
     breed: "ব্ল্যাক বেঙ্গল",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [blackBengalGoatImg, totapuriGoatImg, jamunapariGoatImg],
+    images: [...DEMO_BREED_IMAGES.blackBengalGoat],
     inStock: true,
     isLimited: false,
     slug: "black-bengal-chagol",
@@ -310,7 +294,7 @@ export const initialSaleProducts: SaleProduct[] = [
     breed: "যমুনাপারি",
     gender: "স্ত্রী",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [jamunapariGoatImg, totapuriGoatImg, goatLandscapeImg],
+    images: [...DEMO_BREED_IMAGES.jamunapariGoat],
     inStock: true,
     isLimited: true,
     slug: "jamunapari-chagol",
@@ -328,7 +312,7 @@ export const initialSaleProducts: SaleProduct[] = [
     breed: "তোতাপারি",
     gender: "পুরুষ",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [totapuriGoatImg, jamunapariGoatImg, blackBengalGoatImg],
+    images: [...DEMO_BREED_IMAGES.totapuriGoat],
     inStock: true,
     isLimited: false,
     slug: "totapuri-chagol",
@@ -346,7 +330,7 @@ export const initialSaleProducts: SaleProduct[] = [
     breed: "সোনালী",
     gender: "স্ত্রী",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [sonaliHenImg, deshiHenImg, poultryLandscapeImg],
+    images: [...DEMO_BREED_IMAGES.sonaliChicken],
     inStock: true,
     isLimited: false,
     slug: "sonali-murgi",
@@ -364,7 +348,7 @@ export const initialSaleProducts: SaleProduct[] = [
     breed: "দেশি",
     gender: "মিশ্র",
     healthStatus: "সুস্থ, নিয়মিত টিকা দেওয়া",
-    images: [deshiDuckImg, sonaliHenImg, poultryLandscapeImg],
+    images: [...DEMO_BREED_IMAGES.deshiDuck],
     inStock: true,
     isLimited: false,
     slug: "deshi-hnas",
