@@ -70,6 +70,7 @@ function notifyListeners() {
  */
 export async function getSaleProducts(): Promise<SaleProduct[]> {
   if (!isSupabaseConfigured()) {
+    console.error('[Supabase] Failed to fetch sale products: Supabase is not configured. Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.');
     return cachedSaleProducts;
   }
 
@@ -80,7 +81,7 @@ export async function getSaleProducts(): Promise<SaleProduct[]> {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching sale_products from Supabase:', error);
+      console.error('[Supabase] Failed to fetch sale products:', error);
       return cachedSaleProducts;
     }
 
@@ -90,7 +91,7 @@ export async function getSaleProducts(): Promise<SaleProduct[]> {
     }
     return cachedSaleProducts;
   } catch (err) {
-    console.error('Supabase sale_products fetch exception:', err);
+    console.error('[Supabase] Failed to fetch sale products (exception):', err);
     return cachedSaleProducts;
   }
 }
@@ -119,11 +120,13 @@ export async function getSaleProductBySlug(slug: string): Promise<SaleProduct | 
         .or(`slug.eq.${slug},slug.eq.${decoded},id.eq.${slug}`)
         .maybeSingle();
 
-      if (!error && data) {
+      if (error) {
+        console.error('[Supabase] Failed to fetch sale product by slug:', error);
+      } else if (data) {
         return mapDbToSaleProduct(data);
       }
     } catch (err) {
-      console.warn('Error fetching sale product by slug from Supabase:', err);
+      console.error('[Supabase] Exception fetching sale product by slug:', err);
     }
   }
 
@@ -159,6 +162,7 @@ export async function createSaleProduct(data: Omit<SaleProduct, 'id'> | SaleProd
   };
 
   if (!isSupabaseConfigured()) {
+    console.error('[Supabase] Sale product creation aborted: Supabase is not configured.');
     const newSaleProduct: SaleProduct = {
       ...payload,
       id: 'id' in data && data.id && !data.id.startsWith('new-') ? data.id : `sale-${Date.now()}`
@@ -180,8 +184,8 @@ export async function createSaleProduct(data: Omit<SaleProduct, 'id'> | SaleProd
     .single();
 
   if (error) {
-    console.error('Error inserting sale_product into Supabase:', error);
-    throw new Error(`বিক্রয় পণ্য যোগ করা যায়নি: ${error.message || 'ডাটাবেস ত্রুটি'}`);
+    console.error('[Supabase] Failed to insert sale product:', error);
+    throw new Error(`বিক্রয় পণ্য যোগ করা যায়নি (Supabase): ${error.message || 'ডাটাবেস ত্রুটি'}`);
   }
 
   const newProduct = mapDbToSaleProduct(inserted);
@@ -195,6 +199,7 @@ export async function createSaleProduct(data: Omit<SaleProduct, 'id'> | SaleProd
  */
 export async function updateSaleProduct(id: string, data: Partial<SaleProduct>): Promise<SaleProduct> {
   if (!isSupabaseConfigured()) {
+    console.error('[Supabase] Sale product update aborted: Supabase is not configured.');
     const index = cachedSaleProducts.findIndex((p) => p.id === id);
     if (index === -1) {
       return createSaleProduct({ ...(data as any), id });
@@ -221,8 +226,8 @@ export async function updateSaleProduct(id: string, data: Partial<SaleProduct>):
     .single();
 
   if (error) {
-    console.error('Error updating sale_product in Supabase:', error);
-    throw new Error(`বিক্রয় পণ্য আপডেট করা যায়নি: ${error.message || 'ডাটাবেস ত্রুটি'}`);
+    console.error('[Supabase] Failed to update sale product:', error);
+    throw new Error(`বিক্রয় পণ্য আপডেট করা যায়নি (Supabase): ${error.message || 'ডাটাবেস ত্রুটি'}`);
   }
 
   const updatedProduct = mapDbToSaleProduct(updated);
@@ -236,6 +241,7 @@ export async function updateSaleProduct(id: string, data: Partial<SaleProduct>):
  */
 export async function deleteSaleProduct(id: string): Promise<void> {
   if (!isSupabaseConfigured()) {
+    console.error('[Supabase] Sale product deletion aborted: Supabase is not configured.');
     cachedSaleProducts = cachedSaleProducts.filter((p) => p.id !== id);
     notifyListeners();
     return;
@@ -247,8 +253,8 @@ export async function deleteSaleProduct(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting sale_product from Supabase:', error);
-    throw new Error(`বিক্রয় পণ্য মুছে ফেলা যায়নি: ${error.message || 'ডাটাবেস ত্রুটি'}`);
+    console.error('[Supabase] Failed to delete sale product:', error);
+    throw new Error(`বিক্রয় পণ্য মুছে ফেলা যায়নি (Supabase): ${error.message || 'ডাটাবেস ত্রুটি'}`);
   }
 
   cachedSaleProducts = cachedSaleProducts.filter((p) => p.id !== id);
@@ -262,6 +268,7 @@ export async function deleteDemoSaleProducts(): Promise<number> {
   const initialCount = cachedSaleProducts.length;
 
   if (!isSupabaseConfigured()) {
+    console.error('[Supabase] Demo sale products deletion aborted: Supabase is not configured.');
     cachedSaleProducts = cachedSaleProducts.filter((p) => !p.isDemo && !p.id.startsWith('sale-demo-'));
     const deletedCount = initialCount - cachedSaleProducts.length;
     notifyListeners();
@@ -274,8 +281,8 @@ export async function deleteDemoSaleProducts(): Promise<number> {
     .eq('is_demo', true);
 
   if (error) {
-    console.error('Error deleting demo sale products from Supabase:', error);
-    throw new Error('ডেমো বিক্রয় পণ্য মোছা যায়নি।');
+    console.error('[Supabase] Failed to delete demo sale products:', error);
+    throw new Error(`ডেমো বিক্রয় পণ্য মোছা যায়নি (Supabase): ${error.message || 'ডাটাবেস ত্রুটি'}`);
   }
 
   // Refresh
@@ -308,7 +315,13 @@ export function subscribeToSaleProducts(callback: (products: SaleProduct[]) => v
           getSaleProducts();
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (err || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error('[Supabase] Failed to subscribe to sale products Realtime changes:', status, err);
+        }
+      });
+  } else {
+    console.error('[Supabase] Cannot subscribe to sale products Realtime changes: Supabase is not configured.');
   }
 
   return () => {

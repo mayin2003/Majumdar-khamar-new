@@ -89,6 +89,7 @@ function notifyListeners() {
  */
 export async function getSiteContent(): Promise<SiteHomeContent> {
   if (!isSupabaseConfigured()) {
+    console.error('[Supabase] Failed to fetch site content: Supabase is not configured. Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.');
     return cachedSiteContent;
   }
 
@@ -100,7 +101,7 @@ export async function getSiteContent(): Promise<SiteHomeContent> {
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching site_content from Supabase:', error);
+      console.error('[Supabase] Failed to fetch site content:', error);
       return cachedSiteContent;
     }
 
@@ -110,7 +111,7 @@ export async function getSiteContent(): Promise<SiteHomeContent> {
     }
     return cachedSiteContent;
   } catch (err) {
-    console.error('Supabase site_content fetch exception:', err);
+    console.error('[Supabase] Failed to fetch site content (exception):', err);
     return cachedSiteContent;
   }
 }
@@ -120,6 +121,7 @@ export async function getSiteContent(): Promise<SiteHomeContent> {
  */
 export async function updateSiteContent(data: Partial<SiteHomeContent>): Promise<SiteHomeContent> {
   if (!isSupabaseConfigured()) {
+    console.error('[Supabase] Site content update aborted: Supabase is not configured.');
     cachedSiteContent = {
       ...cachedSiteContent,
       ...data,
@@ -138,8 +140,8 @@ export async function updateSiteContent(data: Partial<SiteHomeContent>): Promise
     .single();
 
   if (error) {
-    console.error('Error upserting site_content in Supabase:', error);
-    throw new Error(`সাইট কনটেন্ট সংরক্ষণ করা যায়নি: ${error.message || 'ডাটাবেস ত্রুটি'}`);
+    console.error('[Supabase] Failed to update site content:', error);
+    throw new Error(`সাইট কনটেন্ট সংরক্ষণ করা যায়নি (Supabase): ${error.message || 'ডাটাবেস ত্রুটি'}`);
   }
 
   cachedSiteContent = mapDbToSiteContent(updated);
@@ -171,7 +173,13 @@ export function subscribeToSiteContent(callback: (data: SiteHomeContent) => void
           getSiteContent();
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (err || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error('[Supabase] Failed to subscribe to site_content Realtime changes:', status, err);
+        }
+      });
+  } else {
+    console.error('[Supabase] Cannot subscribe to site_content Realtime changes: Supabase is not configured.');
   }
 
   return () => {

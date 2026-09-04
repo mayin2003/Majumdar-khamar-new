@@ -15,6 +15,7 @@ import { SaleProductsProvider } from './context/SaleProductsContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { FloatingWhatsApp } from './components/ui/FloatingWhatsApp';
+import { SupabaseConfigBanner } from './components/ui/SupabaseConfigBanner';
 
 import { HomePage } from './pages/HomePage';
 import { ProductsPage } from './pages/ProductsPage';
@@ -104,6 +105,7 @@ export default function App() {
           <SaleProductsProvider>
             <BrowserRouter>
               <ScrollToTop />
+              <SupabaseConfigBanner />
               <AppRoutes />
             </BrowserRouter>
           </SaleProductsProvider>

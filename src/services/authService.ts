@@ -71,17 +71,29 @@ export async function signInAdmin(email: string, pass: string): Promise<AdminAut
   });
 
   if (error) {
-    console.warn('Supabase auth login error:', error.message);
+    console.error('[Supabase Auth] signInWithPassword error:', error);
 
-    if (error.message.includes('Invalid login credentials')) {
-      throw new Error('ভুল ইমেইল বা পাসওয়ার্ড! সঠিক তথ্য দিয়ে পুনরায় চেষ্টা করুন।');
+    const rawMsg = error.message || 'Unknown Supabase error';
+
+    if (rawMsg.toLowerCase().includes('invalid login credentials')) {
+      throw new Error(
+        `ভুল ইমেইল বা পাসওয়ার্ড! (Supabase: "${rawMsg}")। অনুগ্রহ করে সঠিক তথ্য দিয়ে পুনরায় চেষ্টা করুন।`
+      );
     }
 
-    if (error.message.includes('Email not confirmed')) {
-      throw new Error('ইমেইলটি এখনও ভেরিফাই করা হয়নি। অনুগ্রহ করে ইমেইল ভেরিফাই করুন অথবা ড্যাশবোর্ডে Confirm করুন।');
+    if (rawMsg.toLowerCase().includes('email not confirmed')) {
+      throw new Error(
+        `ইমেইল এখনও ভেরিফাই করা হয়নি (Supabase: "${rawMsg}")। অনুগ্রহ করে Supabase ড্যাশবোর্ডে Authentication > Users এ গিয়ে এই ইমেইল Confirm করুন।`
+      );
     }
 
-    throw new Error(error.message || 'লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।');
+    if (rawMsg.toLowerCase().includes('failed to fetch') || rawMsg.toLowerCase().includes('network')) {
+      throw new Error(
+        `সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি (Supabase: "${rawMsg}")। ইন্টারনেট সংযোগ, CORS বা Supabase URL কনফিগারেশন যাচাই করুন।`
+      );
+    }
+
+    throw new Error(`লগইন ব্যর্থ হয়েছে (Supabase): ${rawMsg}`);
   }
 
   if (!data.user) {
