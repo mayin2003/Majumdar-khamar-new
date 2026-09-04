@@ -27,7 +27,7 @@ export const isSupabaseConfigured = (): boolean => {
 
 // Immediate console diagnostics on module load
 if (!isSupabaseConfigured()) {
-  console.error(
+  console.warn(
     '[Supabase Configuration] ⚠️ Supabase environment variables are missing or invalid!\n' +
     `- VITE_SUPABASE_URL: ${supabaseUrl ? `"${supabaseUrl}"` : '(undefined / empty)'}\n` +
     `- VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? '(present but may be placeholder)' : '(undefined / empty)'}\n` +

@@ -289,43 +289,44 @@ export async function deleteDemoProducts(): Promise<number> {
 }
 
 /**
- * Real-time subscription to Products changes via Supabase Realtime
+ * Live synchronization for Products
+ * Uses initial REST fetch + automated background sync (interval & window focus)
+ * to keep data fresh across tabs and devices reliably without fragile WebSocket 1006 closures.
  */
 export function subscribeToProducts(callback: (products: Product[]) => void): () => void {
   listeners.add(callback);
 
-  // Initial trigger
+  // Initial trigger with currently cached products
   callback([...cachedProducts]);
 
   // Initial fetch from Supabase
   getProducts();
 
-  let channel: any = null;
+  // Background polling interval (every 30 seconds when tab is active)
+  const intervalId = setInterval(() => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      getProducts();
+    }
+  }, 30000);
 
-  if (isSupabaseConfigured()) {
-    channel = supabase
-      .channel('public:products')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'products' },
-        () => {
-          // Re-fetch clean list on any insert/update/delete
-          getProducts();
-        }
-      )
-      .subscribe((status, err) => {
-        if (err || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error('[Supabase] Failed to subscribe to products Realtime changes:', status, err);
-        }
-      });
-  } else {
-    console.error('[Supabase] Cannot subscribe to products Realtime changes: Supabase is not configured.');
+  // Refetch when tab becomes visible or gains focus
+  const handleVisibilityOrFocus = () => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      getProducts();
+    }
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
   }
 
   return () => {
     listeners.delete(callback);
-    if (channel) {
-      supabase.removeChannel(channel);
+    clearInterval(intervalId);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
     }
   };
 }
