@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Noto Sans Bengali', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-bengali: 'Noto Sans Bengali', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  
+  --color-farm-dark: #1a3a2a;
+  --color-farm-darker: #0f2a1c;
+  --color-farm-accent: #c0522d;
+  --color-farm-cream: #f5efe0;
+  --color-farm-cream-light: #faf7f0;
+  --color-farm-olive: #7d8c58;
+  --color-farm-gold: #b3924c;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-bengali);
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    background-color: #f5efe0;
+    color: #1a3a2a;
+    font-feature-settings: "kern" 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-bengali);
+    font-weight: 700;
+    line-height: 1.35;
+  }
+}
+
+/* Skeleton shimmer placeholder animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(230, 222, 206, 0.6) 25%,
+    rgba(245, 239, 224, 0.9) 37%,
+    rgba(230, 222, 206, 0.6) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite ease-in-out;
+}
+
+/* Subtle Hero CTA Pulse */
+@keyframes ctaPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(192, 82, 45, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(192, 82, 45, 0);
+  }
+}
+
+.cta-pulse {
+  animation: ctaPulse 2.8s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
