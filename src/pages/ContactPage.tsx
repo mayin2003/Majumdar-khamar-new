@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageTransition } from '../components/layout/PageTransition';
 import { LeafDecoration, LeafDivider } from '../components/ui/LeafDecoration';
 import { CowLogo } from '../components/ui/CowLogo';
+import { FarmLocationMap } from '../components/ui/FarmLocationMap';
 import { useSiteContent } from '../context/SiteContentContext';
 import { MapPin, Phone, MessageCircle, Clock, Navigation, CheckCircle2 } from 'lucide-react';
 
@@ -156,6 +157,9 @@ export const ContactPage: React.FC = () => {
               আসার আগে জানান
             </a>
           </div>
+
+          {/* Google Map Location Section */}
+          <FarmLocationMap />
         </div>
       </div>
     </PageTransition>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -6,16 +6,23 @@ import {
   MessageCircle, 
   ShieldCheck, 
   Truck, 
-  Award
+  Award,
+  RotateCcw,
+  SearchX
 } from 'lucide-react';
 import { PageTransition } from '../components/layout/PageTransition';
 import { LeafDecoration } from '../components/ui/LeafDecoration';
 import { useSaleProducts } from '../context/SaleProductsContext';
 import { useSiteContent } from '../context/SiteContentContext';
 import { toBengaliNumber, formatPriceBDT } from '../utils/bengali';
+import {
+  SaleProductFilters,
+  defaultSaleProductFilters,
+  filterAndSortSaleProducts,
+  CategoryFilter,
+} from '../utils/saleProductFilter';
+import { SaleProductFilterBar } from '../components/sales/SaleProductFilterBar';
 import farmBgPhoto from '../assets/images/real_khamar_user_1788280036119.jpg';
-
-type CategoryFilter = 'all' | 'গরু' | 'ছাগল' | 'মুরগি ও হাঁস';
 
 export const SaleProductsPage: React.FC = () => {
   const { saleProducts, loading } = useSaleProducts();
@@ -23,48 +30,48 @@ export const SaleProductsPage: React.FC = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = (searchParams.get('category') as CategoryFilter) || 'all';
-  const [activeCategory, setActiveCategory] = useState<CategoryFilter>(initialCategory);
 
-  // Sync category state with search param
+  const [filters, setFilters] = useState<SaleProductFilters>({
+    ...defaultSaleProductFilters,
+    category: ['all', 'গরু', 'ছাগল', 'মুরগি ও হাঁস'].includes(initialCategory) ? initialCategory : 'all',
+  });
+
+  // Sync category state when URL search param changes
   useEffect(() => {
     const param = searchParams.get('category') as CategoryFilter;
-    if (param && ['all', 'গরু', 'ছাগল', 'মুরগি ও হাঁস'].includes(param)) {
-      setActiveCategory(param);
-    } else {
-      setActiveCategory('all');
-    }
+    const validCategory: CategoryFilter =
+      param && ['all', 'গরু', 'ছাগল', 'মুরগি ও হাঁস'].includes(param) ? param : 'all';
+
+    setFilters((prev) => (prev.category === validCategory ? prev : { ...prev, category: validCategory }));
   }, [searchParams]);
 
-  const handleCategoryChange = (cat: CategoryFilter) => {
-    setActiveCategory(cat);
-    if (cat === 'all') {
-      searchParams.delete('category');
-      setSearchParams(searchParams, { replace: true });
-    } else {
-      setSearchParams({ category: cat }, { replace: true });
+  const handleFiltersChange = useCallback((updated: Partial<SaleProductFilters>) => {
+    if (updated.category !== undefined) {
+      if (updated.category === 'all') {
+        setSearchParams({}, { replace: true });
+      } else {
+        setSearchParams({ category: updated.category }, { replace: true });
+      }
     }
-  };
+    setFilters((prev) => ({ ...prev, ...updated }));
+  }, [setSearchParams]);
+
+  const handleResetFilters = useCallback(() => {
+    setFilters(defaultSaleProductFilters);
+    setSearchParams({}, { replace: true });
+  }, [setSearchParams]);
 
   const filteredProducts = useMemo(() => {
-    if (activeCategory === 'all') return saleProducts;
-    return saleProducts.filter((p) => {
-      if (activeCategory === 'মুরগি ও হাঁস') {
-        return p.category === 'মুরগি ও হাঁস' || p.category === 'মুরগি' || p.category === 'হাঁস';
-      }
-      return p.category === activeCategory;
-    });
-  }, [saleProducts, activeCategory]);
+    return filterAndSortSaleProducts(saleProducts, filters);
+  }, [saleProducts, filters]);
 
-  const cowCount = useMemo(
-    () => saleProducts.filter((p) => p.category === 'গরু').length,
-    [saleProducts]
-  );
-  const goatCount = useMemo(
-    () => saleProducts.filter((p) => p.category === 'ছাগল').length,
-    [saleProducts]
-  );
-  const poultryCount = useMemo(
-    () => saleProducts.filter((p) => p.category === 'মুরগি ও হাঁস' || p.category === 'মুরগি' || p.category === 'হাঁস').length,
+  const categoryCounts = useMemo(
+    () => ({
+      all: saleProducts.length,
+      cow: saleProducts.filter((p) => p.category === 'গরু').length,
+      goat: saleProducts.filter((p) => p.category === 'ছাগল').length,
+      poultry: saleProducts.filter((p) => p.category === 'মুরগি ও হাঁস' || p.category === 'মুরগি' || p.category === 'হাঁস').length,
+    }),
     [saleProducts]
   );
 
@@ -154,92 +161,48 @@ export const SaleProductsPage: React.FC = () => {
             <p className="text-sm sm:text-base md:text-lg text-[#284937] leading-relaxed max-w-2xl mx-auto mt-2">
               নিচের প্রাণীগুলো এখন বিক্রির জন্য প্রস্তুত আছে। পছন্দ হলে সরাসরি হোয়াটসঅ্যাপে অর্ডার করুন।
             </p>
+          </div>
 
-            {/* SECTION 2 — CATEGORY FILTERS PILLS ROW */}
-            <div className="flex items-center justify-center flex-wrap gap-2 sm:gap-3.5 mt-6 sm:mt-9">
-              {/* Tab 1: সব */}
-              <button
-                type="button"
-                id="filter-all"
-                onClick={() => handleCategoryChange('all')}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-2.5 rounded-full font-bold text-xs sm:text-base transition-all duration-200 cursor-pointer shadow-xs min-h-[44px] ${
-                  activeCategory === 'all'
-                    ? 'bg-[#003F2D] text-white border border-[#003F2D] shadow-md'
-                    : 'bg-[#FAF7EE] text-[#003F2D] border border-[#D6A21D]/40 hover:border-[#003F2D] hover:bg-white active:bg-gray-100'
-                }`}
-              >
-                <div className="grid grid-cols-2 gap-0.5 w-3.5 h-3.5 shrink-0">
-                  <div className={`w-1.5 h-1.5 rounded-[1px] ${activeCategory === 'all' ? 'bg-white' : 'bg-[#003F2D]'}`} />
-                  <div className={`w-1.5 h-1.5 rounded-[1px] ${activeCategory === 'all' ? 'bg-white' : 'bg-[#003F2D]'}`} />
-                  <div className={`w-1.5 h-1.5 rounded-[1px] ${activeCategory === 'all' ? 'bg-white' : 'bg-[#003F2D]'}`} />
-                  <div className={`w-1.5 h-1.5 rounded-[1px] ${activeCategory === 'all' ? 'bg-white' : 'bg-[#003F2D]'}`} />
-                </div>
-                <span>সব ({toBengaliNumber(saleProducts.length)})</span>
-              </button>
-
-              {/* Tab 2: গরু */}
-              <button
-                type="button"
-                id="filter-cow"
-                onClick={() => handleCategoryChange('গরু')}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-2.5 rounded-full font-bold text-xs sm:text-base transition-all duration-200 cursor-pointer shadow-xs min-h-[44px] ${
-                  activeCategory === 'গরু'
-                    ? 'bg-[#003F2D] text-white border border-[#003F2D] shadow-md'
-                    : 'bg-[#FAF7EE] text-[#003F2D] border border-[#D6A21D]/40 hover:border-[#003F2D] hover:bg-white active:bg-gray-100'
-                }`}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#D6A21D] shrink-0">
-                  <path d="M17 8C8 10 5 16 3 22C9 20 15 17 21 11C21 8 20 8 17 8Z" />
-                </svg>
-                <span>গরু ({toBengaliNumber(cowCount)})</span>
-              </button>
-
-              {/* Tab 3: ছাগল */}
-              <button
-                type="button"
-                id="filter-goat"
-                onClick={() => handleCategoryChange('ছাগল')}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-2.5 rounded-full font-bold text-xs sm:text-base transition-all duration-200 cursor-pointer shadow-xs min-h-[44px] ${
-                  activeCategory === 'ছাগল'
-                    ? 'bg-[#003F2D] text-white border border-[#003F2D] shadow-md'
-                    : 'bg-[#FAF7EE] text-[#003F2D] border border-[#D6A21D]/40 hover:border-[#003F2D] hover:bg-white active:bg-gray-100'
-                }`}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#D6A21D] shrink-0">
-                  <path d="M17 8C8 10 5 16 3 22C9 20 15 17 21 11C21 8 20 8 17 8Z" />
-                </svg>
-                <span>ছাগল ({toBengaliNumber(goatCount)})</span>
-              </button>
-
-              {/* Tab 4: মুরগি ও হাঁস */}
-              <button
-                type="button"
-                id="filter-poultry"
-                onClick={() => handleCategoryChange('মুরগি ও হাঁস')}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-2.5 rounded-full font-bold text-xs sm:text-base transition-all duration-200 cursor-pointer shadow-xs min-h-[44px] ${
-                  activeCategory === 'মুরগি ও হাঁস'
-                    ? 'bg-[#003F2D] text-white border border-[#003F2D] shadow-md'
-                    : 'bg-[#FAF7EE] text-[#003F2D] border border-[#D6A21D]/40 hover:border-[#003F2D] hover:bg-white active:bg-gray-100'
-                }`}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#D6A21D] shrink-0">
-                  <path d="M17 8C8 10 5 16 3 22C9 20 15 17 21 11C21 8 20 8 17 8Z" />
-                </svg>
-                <span>মুরগি ও হাঁস ({toBengaliNumber(poultryCount)})</span>
-              </button>
-            </div>
+          {/* SECTION 2 — PREMIUM ANIMAL SEARCH & FILTER BAR */}
+          <div className="max-w-6xl mx-auto">
+            <SaleProductFilterBar
+              filters={filters}
+              onChange={handleFiltersChange}
+              onReset={handleResetFilters}
+              totalMatches={filteredProducts.length}
+              categoryCounts={categoryCounts}
+            />
           </div>
 
           {/* SECTION 3 — 3-COLUMN PRODUCT CARDS GRID */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 lg:gap-8 items-stretch max-w-6xl mx-auto mb-16 sm:mb-20">
             <AnimatePresence mode="popLayout">
               {loading ? (
-                <div className="col-span-3 py-16 text-center text-gray-500 font-medium">
+                <div className="col-span-1 md:col-span-2 lg:col-span-3 py-16 text-center text-gray-500 font-medium">
                   পণ্য তালিকা লোড হচ্ছে...
                 </div>
               ) : filteredProducts.length === 0 ? (
-                <div className="col-span-3 py-16 text-center text-gray-500 font-medium bg-white/60 rounded-2xl border border-[#D6A21D]/30 p-8">
-                  এই ক্যাটাগরিতে বর্তমানে কোনো বিক্রয় পণ্য নেই।
+                <div className="col-span-1 md:col-span-2 lg:col-span-3 py-14 px-6 text-center bg-white/80 backdrop-blur-xs rounded-2xl border border-[#D6A21D]/30 p-8 shadow-xs max-w-xl mx-auto my-4 space-y-4">
+                  <div className="w-14 h-14 mx-auto rounded-full bg-[#FAF7EE] border border-[#D6A21D]/40 flex items-center justify-center text-[#C95A25]">
+                    <SearchX className="w-7 h-7 text-[#003F2D]" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-black text-[#003F2D]">
+                    আপনার অনুসন্ধানের সাথে মিলছে এমন কোনো পশু পাওয়া যায়নি।
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                    অন্য কোনো ফিল্টার বা সার্চ কিওয়ার্ড দিয়ে চেষ্টা করুন অথবা ফিল্টার মুছে সবগুলো পশু দেখুন।
+                  </p>
+                  <div>
+                    <button
+                      type="button"
+                      id="empty-state-reset-all-btn"
+                      onClick={handleResetFilters}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#003F2D] hover:bg-[#1a3a2a] active:bg-black text-white font-bold text-xs sm:text-sm transition-all shadow-xs cursor-pointer min-h-[40px]"
+                    >
+                      <RotateCcw className="w-4 h-4 text-[#D6A21D]" />
+                      <span>সব ফিল্টার মুছুন</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 filteredProducts.map((product, index) => {

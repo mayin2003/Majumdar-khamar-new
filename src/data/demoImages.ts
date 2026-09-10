@@ -12,29 +12,28 @@
 
 export const DEMO_BREED_IMAGES = {
   deshiCalf: [
-    'https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1546445317-29f4545e9d53?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=1000&q=80'
+    'https://images.pexels.com/photos/382166/pexels-photo-382166.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/1276235/pexels-photo-1276235.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.unsplash.com/photo-1546445317-29f4545e9d53?auto=format&fit=crop&w=1200&q=80'
   ],
   deshiBolod: [
-    'https://images.unsplash.com/photo-1560493676-04071c5f467b?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=1000&q=80'
+    'https://images.pexels.com/photos/39358638/pexels-photo-39358638.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/39368226/pexels-photo-39368226.jpeg?auto=compress&cs=tinysrgb&w=1200'
   ],
   sahiwalCow: [
-    'https://images.unsplash.com/photo-1541625602330-2277a4c46182?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1596733430284-f7437764b1a9?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1589802829985-817e51171b92?auto=format&fit=crop&w=1000&q=80'
+    'https://images.pexels.com/photos/11679517/pexels-photo-11679517.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/382166/pexels-photo-382166.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/1069706/pexels-photo-1069706.jpeg?auto=compress&cs=tinysrgb&w=1200'
   ],
   friesianCross: [
-    'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1000&q=80',
-    'https://images.pexels.com/photos/422218/pexels-photo-422218.jpeg?auto=compress&cs=tinysrgb&w=1000',
-    'https://images.pexels.com/photos/458991/pexels-photo-458991.jpeg?auto=compress&cs=tinysrgb&w=1000'
+    'https://images.pexels.com/photos/31576921/pexels-photo-31576921.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/31576924/pexels-photo-31576924.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/31576927/pexels-photo-31576927.jpeg?auto=compress&cs=tinysrgb&w=1200'
   ],
   breedingSahiwalBull: [
-    'https://images.unsplash.com/photo-1551214012-84f95e060dee?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1560493676-04071c5f467b?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=1000&q=80'
+    'https://images.pexels.com/photos/436796/pexels-photo-436796.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/1069706/pexels-photo-1069706.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/2647053/pexels-photo-2647053.jpeg?auto=compress&cs=tinysrgb&w=1200'
   ],
   blackBengalGoat: [
     'https://images.unsplash.com/photo-1524024973431-2ad916746881?auto=format&fit=crop&w=1000&q=80',

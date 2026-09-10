@@ -89,7 +89,7 @@ function notifyListeners() {
  */
 export async function getSiteContent(): Promise<SiteHomeContent> {
   if (!isSupabaseConfigured()) {
-    console.error('[Supabase] Failed to fetch site content: Supabase is not configured. Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.');
+    console.warn('[Supabase] Live site content sync paused: Supabase is not configured.');
     return cachedSiteContent;
   }
 
@@ -101,7 +101,7 @@ export async function getSiteContent(): Promise<SiteHomeContent> {
       .maybeSingle();
 
     if (error) {
-      console.error('[Supabase] Failed to fetch site content:', error);
+      console.warn('[Supabase] Live site content fetch notice (using cache):', error.message || error);
       return cachedSiteContent;
     }
 
@@ -110,8 +110,8 @@ export async function getSiteContent(): Promise<SiteHomeContent> {
       notifyListeners();
     }
     return cachedSiteContent;
-  } catch (err) {
-    console.error('[Supabase] Failed to fetch site content (exception):', err);
+  } catch (err: any) {
+    console.warn('[Supabase] Live site content fetch notice (fallback to cache):', err?.message || err);
     return cachedSiteContent;
   }
 }
@@ -133,7 +133,7 @@ export async function updateSiteContent(data: Partial<SiteHomeContent>): Promise
 
   const dbRow = mapSiteContentToDb(data);
 
-  const { data: updated, error } = await supabase
+  let { data: updated, error } = await supabase
     .from('site_content')
     .upsert(dbRow)
     .select('*')

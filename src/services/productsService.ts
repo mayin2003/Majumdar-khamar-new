@@ -73,7 +73,7 @@ function notifyListeners() {
  */
 export async function getProducts(): Promise<Product[]> {
   if (!isSupabaseConfigured()) {
-    console.error('[Supabase] Failed to fetch products: Supabase is not configured. Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.');
+    console.warn('[Supabase] Live products sync paused: Supabase is not configured.');
     return cachedProducts;
   }
 
@@ -84,7 +84,7 @@ export async function getProducts(): Promise<Product[]> {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('[Supabase] Failed to fetch products:', error);
+      console.warn('[Supabase] Live products fetch notice (using cache):', error.message || error);
       return cachedProducts;
     }
 
@@ -93,8 +93,8 @@ export async function getProducts(): Promise<Product[]> {
       notifyListeners();
     }
     return cachedProducts;
-  } catch (err) {
-    console.error('[Supabase] Failed to fetch products (exception):', err);
+  } catch (err: any) {
+    console.warn('[Supabase] Live products fetch notice (fallback to cache):', err?.message || err);
     return cachedProducts;
   }
 }
@@ -124,12 +124,12 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
         .maybeSingle();
 
       if (error) {
-        console.error('[Supabase] Failed to fetch product by slug:', error);
+        console.warn('[Supabase] Live product by slug notice:', error.message || error);
       } else if (data) {
         return mapDbToProduct(data);
       }
-    } catch (err) {
-      console.error('[Supabase] Exception fetching product by slug:', err);
+    } catch (err: any) {
+      console.warn('[Supabase] Exception fetching product by slug (fallback to cache):', err?.message || err);
     }
   }
 

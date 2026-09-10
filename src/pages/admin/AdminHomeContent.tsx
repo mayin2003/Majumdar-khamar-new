@@ -19,6 +19,8 @@ import {
   FileCheck2
 } from 'lucide-react';
 
+import { defaultHomeContent } from '../../types/siteContent';
+
 import defaultCowImg from '../../assets/images/sales_sahiwal_cow_1788283112846.jpg';
 import defaultGoatImg from '../../assets/images/sales_black_bengal_1788283142437.jpg';
 import defaultPoultryImg from '../../assets/images/sales_sonali_hen_1788283193947.jpg';

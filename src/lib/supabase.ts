@@ -67,9 +67,60 @@ if (!isSupabaseConfigured()) {
   console.log('[DEBUG] Sanitized Supabase URL in use:', JSON.stringify(supabaseUrl));
 }
 
-// 2. Official createClient initialization with NO custom path wrappers
-const activeUrl = isSupabaseConfigured() ? supabaseUrl : 'https://missing-supabase-url.supabase.co';
+// In browser environments, using the same-origin proxy (/api/supabase) eliminates CORS errors,
+// browser sandbox restrictions inside iframes, and ISP/adblocker blocks of supabase.co.
+const getActiveUrl = (): string => {
+  if (!isSupabaseConfigured()) {
+    return 'https://missing-supabase-url.supabase.co';
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}/api/supabase`;
+  }
+  return supabaseUrl;
+};
+
+const activeUrl = getActiveUrl();
 const activeKey = isSupabaseConfigured() ? supabaseAnonKey : 'missing-supabase-anon-key';
+
+/**
+ * Resilient fetch wrapper:
+ * 1. Tries the active URL (proxied through same-origin Vite dev proxy in browser).
+ * 2. If the proxy fails or returns 404/502, automatically falls back to direct Supabase URL.
+ * 3. If direct fetch fails (e.g. browser CORS/CSP), retries via the proxy.
+ */
+const resilientFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const urlStr = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+
+  try {
+    const res = await fetch(input, init);
+    // If the proxy returns 404 or bad gateway, attempt direct fallback
+    if (!res.ok && (res.status === 404 || res.status === 502 || res.status === 503) && urlStr.includes('/api/supabase') && supabaseUrl) {
+      const directUrl = urlStr.replace(/^https?:\/\/[^/]+\/api\/supabase/, supabaseUrl);
+      return await fetch(directUrl, init);
+    }
+    return res;
+  } catch (err) {
+    // If proxied fetch threw network error, attempt direct fallback
+    if (urlStr.includes('/api/supabase') && supabaseUrl) {
+      try {
+        const directUrl = urlStr.replace(/^https?:\/\/[^/]+\/api\/supabase/, supabaseUrl);
+        return await fetch(directUrl, init);
+      } catch {
+        // preserve original error
+      }
+    } else if (!urlStr.includes('/api/supabase') && typeof window !== 'undefined' && window.location?.origin) {
+      // If direct fetch failed (e.g. CORS preflight in iframe), retry via proxy
+      try {
+        const parsed = new URL(urlStr);
+        const proxyUrl = `${window.location.origin}/api/supabase${parsed.pathname}${parsed.search}`;
+        return await fetch(proxyUrl, init);
+      } catch {
+        // preserve original error
+      }
+    }
+    throw err;
+  }
+};
 
 export const supabase: SupabaseClient = createClient(activeUrl, activeKey, {
   auth: {
@@ -77,6 +128,9 @@ export const supabase: SupabaseClient = createClient(activeUrl, activeKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'majumdar_khamar_auth_session'
+  },
+  global: {
+    fetch: resilientFetch
   }
 });
 
