@@ -67,10 +67,20 @@ export async function signInAdmin(email: string, pass: string): Promise<AdminAut
 
   console.log('[DEBUG Auth] Attempting signInWithPassword for email:', JSON.stringify(cleanEmail));
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: cleanEmail,
-    password: cleanPass
-  });
+  let data: any = null;
+  let error: any = null;
+
+  try {
+    const res = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password: cleanPass
+    });
+    data = res.data;
+    error = res.error;
+  } catch (err: any) {
+    console.error('[Supabase Auth] signInWithPassword exception:', err);
+    error = err;
+  }
 
   if (error) {
     console.error('[Supabase Auth] signInWithPassword error:', error);

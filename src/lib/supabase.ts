@@ -67,13 +67,76 @@ if (!isSupabaseConfigured()) {
   console.log('[DEBUG] Sanitized Supabase URL in use:', JSON.stringify(supabaseUrl));
 }
 
-// In browser environments, using the same-origin proxy (/api/supabase) eliminates CORS errors,
-// browser sandbox restrictions inside iframes, and ISP/adblocker blocks of supabase.co.
+const getDirectUrl = (urlStr: string): string => {
+  if (!supabaseUrl) return urlStr;
+  return urlStr
+    .replace(/^https?:\/\/[^/]+\/api\/supabase/, supabaseUrl)
+    .replace(/^\/api\/supabase/, supabaseUrl);
+};
+
+const executeDirectFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const urlStr = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+  const directUrl = getDirectUrl(urlStr);
+  return await fetch(directUrl, init);
+};
+
+/**
+ * Resilient fetch wrapper with proxy-fallback logic:
+ * 1. Checks response.ok, application/json content-type, and non-empty body before parsing JSON.
+ * 2. Wraps JSON parsing in try/catch to fall back cleanly without breaking login flow.
+ * 3. In production (PROD), bypasses the proxy path entirely and calls direct Supabase endpoint.
+ * 4. Emits console.warn diagnostics at each fallback trigger point.
+ */
+export const resilientFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const urlStr = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+
+  // 3. Skip proxy in production builds and go straight to direct Supabase endpoint
+  if (import.meta.env.PROD && urlStr.includes('/api/supabase')) {
+    console.warn('[resilientFetch] Proxy unavailable or invalid response, using direct endpoint');
+    return await executeDirectFetch(input, init);
+  }
+
+  // If not targeting proxy path, fetch directly
+  if (!urlStr.includes('/api/supabase')) {
+    return await fetch(input, init);
+  }
+
+  // Development mode proxy attempt with resilient fallback
+  try {
+    const response = await fetch(input, init);
+
+    // 1. Check response.ok, application/json content-type, and non-empty body
+    const contentType = response.headers.get('content-type') || '';
+    const contentLength = response.headers.get('content-length');
+    const isNonEmpty = contentLength !== '0';
+
+    if (!response.ok || !contentType.toLowerCase().includes('application/json') || !isNonEmpty) {
+      console.warn('[resilientFetch] Proxy unavailable or invalid response, using direct endpoint');
+      return await executeDirectFetch(input, init);
+    }
+
+    // 2. Wrap .json() check in try/catch to silently catch errors and fall back to direct endpoint
+    try {
+      const clonedResponse = response.clone();
+      await clonedResponse.json();
+    } catch {
+      console.warn('[resilientFetch] Proxy unavailable or invalid response, using direct endpoint');
+      return await executeDirectFetch(input, init);
+    }
+
+    return response;
+  } catch {
+    console.warn('[resilientFetch] Proxy unavailable or invalid response, using direct endpoint');
+    return await executeDirectFetch(input, init);
+  }
+};
+
 const getActiveUrl = (): string => {
   if (!isSupabaseConfigured()) {
     return 'https://missing-supabase-url.supabase.co';
   }
-  if (typeof window !== 'undefined' && window.location?.origin) {
+  // In production builds, skip proxy attempt entirely and use direct Supabase project URL
+  if (!import.meta.env.PROD && typeof window !== 'undefined' && window.location?.origin) {
     return `${window.location.origin}/api/supabase`;
   }
   return supabaseUrl;
@@ -81,46 +144,6 @@ const getActiveUrl = (): string => {
 
 const activeUrl = getActiveUrl();
 const activeKey = isSupabaseConfigured() ? supabaseAnonKey : 'missing-supabase-anon-key';
-
-/**
- * Resilient fetch wrapper:
- * 1. Tries the active URL (proxied through same-origin Vite dev proxy in browser).
- * 2. If the proxy fails or returns 404/502, automatically falls back to direct Supabase URL.
- * 3. If direct fetch fails (e.g. browser CORS/CSP), retries via the proxy.
- */
-const resilientFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  const urlStr = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
-
-  try {
-    const res = await fetch(input, init);
-    // If the proxy returns 404 or bad gateway, attempt direct fallback
-    if (!res.ok && (res.status === 404 || res.status === 502 || res.status === 503) && urlStr.includes('/api/supabase') && supabaseUrl) {
-      const directUrl = urlStr.replace(/^https?:\/\/[^/]+\/api\/supabase/, supabaseUrl);
-      return await fetch(directUrl, init);
-    }
-    return res;
-  } catch (err) {
-    // If proxied fetch threw network error, attempt direct fallback
-    if (urlStr.includes('/api/supabase') && supabaseUrl) {
-      try {
-        const directUrl = urlStr.replace(/^https?:\/\/[^/]+\/api\/supabase/, supabaseUrl);
-        return await fetch(directUrl, init);
-      } catch {
-        // preserve original error
-      }
-    } else if (!urlStr.includes('/api/supabase') && typeof window !== 'undefined' && window.location?.origin) {
-      // If direct fetch failed (e.g. CORS preflight in iframe), retry via proxy
-      try {
-        const parsed = new URL(urlStr);
-        const proxyUrl = `${window.location.origin}/api/supabase${parsed.pathname}${parsed.search}`;
-        return await fetch(proxyUrl, init);
-      } catch {
-        // preserve original error
-      }
-    }
-    throw err;
-  }
-};
 
 export const supabase: SupabaseClient = createClient(activeUrl, activeKey, {
   auth: {
