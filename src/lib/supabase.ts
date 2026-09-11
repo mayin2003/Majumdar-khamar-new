@@ -157,4 +157,17 @@ export const supabase: SupabaseClient = createClient(activeUrl, activeKey, {
   }
 });
 
+// Ensure realtime socket connects directly to Supabase WebSocket gateway even in dev mode
+if (isSupabaseConfigured() && supabaseUrl && (supabase as any)?.realtime?.socketAdapter?.socket) {
+  try {
+    const wsUrl = supabaseUrl.replace(/^http/, 'ws');
+    const socket = (supabase as any).realtime.socketAdapter.socket;
+    if (socket && typeof socket.endPoint === 'string' && !socket.endPoint.startsWith(wsUrl)) {
+      socket.endPoint = `${wsUrl}/realtime/v1/websocket`;
+    }
+  } catch {
+    // Non-critical diagnostic
+  }
+}
+
 
