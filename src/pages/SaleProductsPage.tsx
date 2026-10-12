@@ -84,7 +84,7 @@ export const SaleProductsPage: React.FC = () => {
     <PageTransition>
       <div
         id="sales-page-wrapper"
-        className="relative w-full min-h-screen bg-[#F5F0E3] overflow-hidden text-[#1a3a2a] pb-12"
+        className="relative w-full min-h-screen bg-transparent overflow-hidden text-[#1a3a2a] pb-12"
       >
         {/* Subtle Botanical Corner & Side Decorative Illustrations */}
         <LeafDecoration position="top-left" opacity={0.16} className="-translate-x-8 -translate-y-8" />

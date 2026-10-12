@@ -40,7 +40,7 @@ export const ContactPage: React.FC = () => {
 
   return (
     <PageTransition>
-      <div id="contact-page-container" className="relative min-h-[75vh] py-12 md:py-20 px-4 bg-[#F8FAF8]">
+      <div id="contact-page-container" className="relative min-h-[75vh] py-12 md:py-20 px-4 bg-transparent">
         <LeafDecoration position="top-left" opacity={0.12} />
         <LeafDecoration position="bottom-right" opacity={0.12} />
 

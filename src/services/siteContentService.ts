@@ -12,9 +12,14 @@ export function mapDbToSiteContent(row: any): SiteHomeContent {
   const farmHeading = row.farm_section_heading || defaultHomeContent.farmSectionHeading;
   const farmPara = row.farm_section_paragraph || defaultHomeContent.farmSectionParagraph;
 
+  const localHeroBg = typeof window !== 'undefined' ? localStorage.getItem('mk_site_hero_bg_url') || '' : '';
+  const heroBg = row.hero_bg_url || row.heroBgUrl || localHeroBg || defaultHomeContent.heroBgUrl;
+
   return {
     id: 'home',
     logoUrl: row.logo_url ?? defaultHomeContent.logoUrl,
+    heroBgUrl: heroBg,
+    hero_bg_url: heroBg,
     heroImageCow: heroCow,
     heroImageGoat: heroGoat,
     heroImageBird: heroBird,
@@ -45,6 +50,9 @@ export function mapSiteContentToDb(data: Partial<SiteHomeContent>): Record<strin
   const dbRecord: Record<string, any> = { id: 'home' };
 
   if (data.logoUrl !== undefined) dbRecord.logo_url = data.logoUrl;
+  if (data.heroBgUrl !== undefined || data.hero_bg_url !== undefined) {
+    dbRecord.hero_bg_url = data.heroBgUrl ?? data.hero_bg_url;
+  }
   if (data.heroImageCow !== undefined || data.heroCowImg !== undefined) {
     dbRecord.hero_image_cow = data.heroImageCow ?? data.heroCowImg;
   }
@@ -130,7 +138,7 @@ export async function getSiteContent(): Promise<SiteHomeContent> {
   try {
     const { data, error } = await supabase
       .from('site_content')
-      .select(SITE_CONTENT_COLUMNS)
+      .select('*')
       .eq('id', 'home')
       .maybeSingle();
 
@@ -155,6 +163,19 @@ export async function getSiteContent(): Promise<SiteHomeContent> {
  * Update home page content in Supabase
  */
 export async function updateSiteContent(data: Partial<SiteHomeContent>): Promise<SiteHomeContent> {
+  if (typeof window !== 'undefined' && (data.heroBgUrl !== undefined || data.hero_bg_url !== undefined)) {
+    try {
+      const val = data.heroBgUrl ?? data.hero_bg_url ?? '';
+      if (val) {
+        localStorage.setItem('mk_site_hero_bg_url', val);
+      } else {
+        localStorage.removeItem('mk_site_hero_bg_url');
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }
+
   if (!isSupabaseConfigured()) {
     console.error('[Supabase] Site content update aborted: Supabase is not configured.');
     cachedSiteContent = {
@@ -168,6 +189,7 @@ export async function updateSiteContent(data: Partial<SiteHomeContent>): Promise
 
   const dbRow = mapSiteContentToDb(data);
 
+  let updatedRow: any = null;
   let { data: updated, error } = await supabase
     .from('site_content')
     .upsert(dbRow)
@@ -175,11 +197,29 @@ export async function updateSiteContent(data: Partial<SiteHomeContent>): Promise
     .single();
 
   if (error) {
-    console.error('[Supabase] Failed to update site content:', error);
-    throw new Error(`সাইট কনটেন্ট সংরক্ষণ করা যায়নি (Supabase): ${error.message || 'ডাটাবেস ত্রুটি'}`);
+    if (error.message?.includes('hero_bg_url') && 'hero_bg_url' in dbRow) {
+      console.warn('[Supabase] hero_bg_url column not found in database table, saving remaining fields to DB and caching hero_bg_url.');
+      const fallbackRow = { ...dbRow };
+      delete fallbackRow.hero_bg_url;
+      const retry = await supabase
+        .from('site_content')
+        .upsert(fallbackRow)
+        .select('*')
+        .single();
+      if (retry.error) {
+        throw new Error(`সাইট কনটেন্ট সংরক্ষণ করা যায়নি (Supabase): ${retry.error.message || 'ডাটাবেস ত্রুটি'}`);
+      }
+      updatedRow = { ...retry.data, hero_bg_url: dbRow.hero_bg_url };
+    } else {
+      console.error('[Supabase] Failed to update site content:', error);
+      throw new Error(`সাইট কনটেন্ট সংরক্ষণ করা যায়নি (Supabase): ${error.message || 'ডাটাবেস ত্রুটি'}`);
+    }
+  } else {
+    updatedRow = updated;
   }
 
-  cachedSiteContent = mapDbToSiteContent(updated);
+  cachedSiteContent = mapDbToSiteContent(updatedRow);
+  writeSiteContentSessionCache(cachedSiteContent);
   notifyListeners();
   return cachedSiteContent;
 }

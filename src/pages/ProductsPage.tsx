@@ -66,7 +66,7 @@ export const ProductsPage: React.FC = () => {
     <PageTransition>
       <div
         id="products-page-wrapper"
-        className="relative w-full min-h-screen bg-[#F5F0E3] overflow-hidden pt-8 pb-16 lg:pt-12 lg:pb-24"
+        className="relative w-full min-h-screen bg-transparent overflow-hidden pt-8 pb-16 lg:pt-12 lg:pb-24"
       >
         {/* Subtle Botanical Corner Decorations */}
         <LeafDecoration position="top-left" opacity={0.16} className="-translate-x-8 -translate-y-8" />

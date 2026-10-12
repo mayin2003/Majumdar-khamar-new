@@ -112,7 +112,7 @@ export const CategoryDetailPage: React.FC = () => {
     <PageTransition>
       <div
         id="category-detail-page-wrapper"
-        className="relative w-full min-h-screen bg-[#f5efe0] overflow-hidden text-[#1a3a2a] pb-16"
+        className="relative w-full min-h-screen bg-transparent overflow-hidden text-[#1a3a2a] pb-16"
       >
         {/* Corner Botanical Foliage Decorations */}
         <LeafDecoration position="top-left" opacity={0.14} className="-translate-x-8 -translate-y-8" />

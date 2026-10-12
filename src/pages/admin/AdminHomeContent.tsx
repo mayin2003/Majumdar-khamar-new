@@ -285,6 +285,7 @@ export const AdminHomeContent: React.FC = () => {
 
   const [formData, setFormData] = useState({
     logoUrl: siteContent.logoUrl || '',
+    heroBgUrl: siteContent.heroBgUrl || siteContent.hero_bg_url || '',
     heroImageCow: siteContent.heroImageCow || siteContent.heroCowImg || defaultCowImg,
     heroImageGoat: siteContent.heroImageGoat || siteContent.heroGoatImg || defaultGoatImg,
     heroImageBird: siteContent.heroImageBird || siteContent.heroPoultryImg || defaultPoultryImg,
@@ -316,6 +317,7 @@ export const AdminHomeContent: React.FC = () => {
   useEffect(() => {
     setFormData({
       logoUrl: siteContent.logoUrl || '',
+      heroBgUrl: siteContent.heroBgUrl || siteContent.hero_bg_url || '',
       heroImageCow: siteContent.heroImageCow || siteContent.heroCowImg || defaultCowImg,
       heroImageGoat: siteContent.heroImageGoat || siteContent.heroGoatImg || defaultGoatImg,
       heroImageBird: siteContent.heroImageBird || siteContent.heroPoultryImg || defaultPoultryImg,
@@ -401,6 +403,7 @@ export const AdminHomeContent: React.FC = () => {
     const originalHeadline = siteContent.headline || "মজুমদার খামার,\nখাঁটি প্রাণী,\nউন্নত আগামী";
 
     if (currentHeadline.trim() !== originalHeadline.trim()) return true;
+    if (formData.heroBgUrl !== (siteContent.heroBgUrl || siteContent.hero_bg_url || '')) return true;
     if (formData.tagline !== (siteContent.tagline || "প্রকৃতি থেকে, আপনার টেবিলে")) return true;
     if (formData.heroParagraph !== (siteContent.heroParagraph || "গরু, ছাগল, মুরগি ও হাঁস — আপনার পরিবারের জন্য। তাজা, স্বাস্থ্যকর ও প্রাকৃতিকভাবে পালন — সরাসরি আমাদের খামার থেকে আপনার বাড়িতে।")) return true;
     if (formData.location !== (siteContent.location || siteContent.locationText || "উত্তর রাজেশপুর, পরশুরাম, ফেনী")) return true;
@@ -631,6 +634,20 @@ export const AdminHomeContent: React.FC = () => {
               colSpan="sm:col-span-2"
               onSelectFile={(file) => handleSelectImageFile('farmPhotoUrl', file)}
               onClearPending={() => handleClearPending('farmPhotoUrl')}
+            />
+
+            {/* Slot 6: Hero Background Photo */}
+            <ImageUploadCard
+              id="image-slot-hero-bg"
+              slotKey="heroBgUrl"
+              title="হিরো ব্যাকগ্রাউন্ড ছবি"
+              subtitle="হোমপেজ প্রধান হিরো সেকশনের সম্পূর্ণ ব্যাকগ্রাউন্ড ছবি"
+              currentUrl={formData.heroBgUrl}
+              pending={pendingImages['heroBgUrl'] || null}
+              error={slotErrors['heroBgUrl'] || null}
+              colSpan="sm:col-span-2 lg:col-span-3"
+              onSelectFile={(file) => handleSelectImageFile('heroBgUrl', file)}
+              onClearPending={() => handleClearPending('heroBgUrl')}
             />
           </div>
         </div>

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { 
   Leaf, 
   ShieldCheck, 
@@ -17,7 +17,6 @@ import { useSiteContent } from '../../context/SiteContentContext';
 import cowCardImg from '../../assets/images/hero_cow_card_1788279448949.jpg';
 import goatCardImg from '../../assets/images/hero_goat_card_1788279467275.jpg';
 import poultryCardImg from '../../assets/images/hero_poultry_card_1788279487450.jpg';
-import heroFarmBgImg from '../../assets/images/hero_farm_bg_1789116067701.jpg';
 
 export const HeroSection: React.FC = () => {
   const { 
@@ -25,8 +24,14 @@ export const HeroSection: React.FC = () => {
     heroParagraph, 
     heroImageCow, 
     heroImageGoat, 
-    heroImageBird 
+    heroImageBird,
+    heroBgUrl,
+    hero_bg_url
   } = useSiteContent();
+
+  const activeHeroBg = heroBgUrl || hero_bg_url;
+  const [bgLoaded, setBgLoaded] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   // 3 Tilted Card definitions matching exact angles (-4°, +3°, +8°) and info category routes
   const tiltedCards = [
@@ -135,38 +140,54 @@ export const HeroSection: React.FC = () => {
   return (
     <section
       id="hero-section"
-      className="relative isolate bg-[#f8f7e6] overflow-hidden pt-6 sm:pt-10 lg:pt-14 pb-0"
+      className="relative isolate overflow-hidden pt-6 sm:pt-10 lg:pt-14 pb-0 bg-[#f8f7e6]"
     >
-      {/* 1. Atmospheric blurred warm farm landscape fading in behind the right side only */}
+      {/* ========================================================================= */}
+      {/* FULL-WIDTH HERO BACKGROUND: Uploaded photo or soft cream gradient fallback */}
+      {/* ========================================================================= */}
       <div
-        className="absolute top-0 right-0 bottom-24 w-full lg:w-[58%] pointer-events-none select-none -z-10 overflow-hidden"
+        className="absolute inset-0 pointer-events-none select-none overflow-hidden -z-10 bg-[#f8f7e6]"
         aria-hidden="true"
       >
-        <img
-          src={heroFarmBgImg}
-          alt=""
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-          className="w-full h-full object-cover object-center filter blur-[3px] opacity-35"
-        />
-        {/* Soft linear mask gradient: transparent on left to warm sunlight wash on right */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#f8f7e6] via-[#f8f7e6]/70 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#f8f7e6]/60 via-transparent to-[#f8f7e6]" />
-      </div>
+        {activeHeroBg ? (
+          <motion.img
+            src={activeHeroBg}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+            loading="eager"
+            onLoad={() => setBgLoaded(true)}
+            animate={shouldReduceMotion ? { scale: 1 } : { scale: [1, 1.04, 1] }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+            className={`w-full h-full object-cover object-center lg:object-bottom will-change-transform transition-opacity duration-500 ${
+              bgLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-[#f8f7e6] via-[#f5f3dc] to-[#f8f7e6]" />
+        )}
 
-      {/* 2. Big decorative green botanical leaves in top-left corner & edges */}
-      <div className="absolute top-0 left-0 pointer-events-none select-none z-0 opacity-25 -translate-x-10 -translate-y-10" aria-hidden="true">
-        <svg width="260" height="260" viewBox="0 0 200 200" fill="none">
-          <path d="M10 20C40 70 80 110 180 130C150 100 120 60 70 20C40 0 20 5 10 20Z" fill="#0b3d2b" />
-          <path d="M50 80C90 120 120 160 190 190C160 140 140 100 90 70C70 55 55 65 50 80Z" fill="#14803c" />
-          <path d="M5 90C30 130 60 150 140 180C110 150 90 120 50 90Z" fill="#0b3d2b" />
-        </svg>
-      </div>
-      <div className="absolute top-20 right-0 pointer-events-none select-none z-0 opacity-20 translate-x-12" aria-hidden="true">
-        <svg width="200" height="200" viewBox="0 0 200 200" fill="none">
-          <path d="M190 10C160 60 120 100 20 120C50 90 80 50 130 10C160 -10 180 -5 190 10Z" fill="#14803c" />
-        </svg>
+        {/* Readability Overlay — Desktop: Left-side horizontal gradient from cream rgba(248,247,230,0.85) to transparent at ~60% */}
+        <div
+          className="absolute inset-0 pointer-events-none hidden lg:block"
+          style={{
+            background:
+              'linear-gradient(to right, rgba(248,247,230,0.88) 0%, rgba(248,247,230,0.85) 40%, rgba(248,247,230,0.35) 52%, rgba(248,247,230,0) 60%)'
+          }}
+        />
+
+        {/* Readability Overlay — Mobile: Stronger cream overlay (~0.75 across top & text area) */}
+        <div
+          className="absolute inset-0 pointer-events-none lg:hidden"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(248,247,230,0.85) 0%, rgba(248,247,230,0.78) 55%, rgba(248,247,230,0.4) 85%, rgba(248,247,230,0.15) 100%)'
+          }}
+        />
       </div>
 
       {/* Hero Content Container */}
@@ -385,32 +406,6 @@ export const HeroSection: React.FC = () => {
       {/* 4. BOTTOM BAND: Wavy dark-green curved band with golden swoosh line */}
       {/* ========================================================= */}
       <div className="relative w-full overflow-hidden leading-none z-20">
-        
-        {/* Farm silhouette illustration above the bottom wave on left */}
-        <div
-          className="absolute left-6 sm:left-14 bottom-20 sm:bottom-28 pointer-events-none select-none z-10 opacity-20 hidden md:block"
-          aria-hidden="true"
-        >
-          <svg width="220" height="60" viewBox="0 0 220 60" fill="none">
-            {/* House silhouette */}
-            <polygon points="20,40 35,25 50,40" fill="#0b3d2b" />
-            <rect x="23" y="40" width="24" height="20" fill="#0b3d2b" />
-            {/* Silo */}
-            <rect x="52" y="28" width="14" height="32" rx="3" fill="#0b3d2b" />
-            <ellipse cx="59" cy="28" rx="7" ry="4" fill="#0b3d2b" />
-            {/* Trees */}
-            <ellipse cx="80" cy="38" rx="10" ry="16" fill="#0b3d2b" />
-            <ellipse cx="100" cy="34" rx="12" ry="20" fill="#0b3d2b" />
-            {/* Cow silhouettes */}
-            <ellipse cx="140" cy="48" rx="12" ry="7" fill="#0b3d2b" />
-            <circle cx="152" cy="44" r="5" fill="#0b3d2b" />
-            <rect x="132" y="52" width="2" height="8" fill="#0b3d2b" />
-            <rect x="137" y="52" width="2" height="8" fill="#0b3d2b" />
-            <rect x="145" y="52" width="2" height="8" fill="#0b3d2b" />
-            <rect x="149" y="52" width="2" height="8" fill="#0b3d2b" />
-          </svg>
-        </div>
-
         {/* Golden-Yellow Swoosh Line along wave top edge */}
         <div className="w-full overflow-hidden">
           <svg

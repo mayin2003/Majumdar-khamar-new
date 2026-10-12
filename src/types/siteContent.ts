@@ -1,6 +1,8 @@
 export interface SiteHomeContent {
   id?: string;
   logoUrl?: string;
+  heroBgUrl?: string;
+  hero_bg_url?: string;
   heroImageCow?: string;
   heroImageGoat?: string;
   heroImageBird?: string;
@@ -27,6 +29,8 @@ export interface SiteHomeContent {
 export const defaultHomeContent: SiteHomeContent = {
   id: "home",
   logoUrl: "",
+  heroBgUrl: "",
+  hero_bg_url: "",
   heroImageCow: "",
   heroImageGoat: "",
   heroImageBird: "",

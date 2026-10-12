@@ -8,6 +8,8 @@ import {
 
 interface SiteContentContextType {
   logoUrl?: string;
+  heroBgUrl?: string;
+  hero_bg_url?: string;
   heroImageCow?: string;
   heroImageGoat?: string;
   heroImageBird?: string;
@@ -38,6 +40,8 @@ export const SiteContentProvider: React.FC<{ children: ReactNode }> = ({ childre
       const merged: SiteHomeContent = {
         ...defaultHomeContent,
         ...freshData,
+        heroBgUrl: freshData.heroBgUrl || freshData.hero_bg_url || defaultHomeContent.heroBgUrl,
+        hero_bg_url: freshData.heroBgUrl || freshData.hero_bg_url || defaultHomeContent.hero_bg_url,
         heroImageCow: freshData.heroImageCow || freshData.heroCowImg || defaultHomeContent.heroImageCow,
         heroImageGoat: freshData.heroImageGoat || freshData.heroGoatImg || defaultHomeContent.heroImageGoat,
         heroImageBird: freshData.heroImageBird || freshData.heroPoultryImg || defaultHomeContent.heroImageBird,
@@ -63,6 +67,8 @@ export const SiteContentProvider: React.FC<{ children: ReactNode }> = ({ childre
   const updateSiteContent = async (data: Partial<SiteHomeContent>) => {
     const normalizedData: Partial<SiteHomeContent> = {
       ...data,
+      heroBgUrl: data.heroBgUrl ?? data.hero_bg_url ?? siteContent.heroBgUrl,
+      hero_bg_url: data.heroBgUrl ?? data.hero_bg_url ?? siteContent.hero_bg_url,
       heroImageCow: data.heroImageCow ?? data.heroCowImg ?? siteContent.heroImageCow,
       heroCowImg: data.heroImageCow ?? data.heroCowImg ?? siteContent.heroCowImg,
       heroImageGoat: data.heroImageGoat ?? data.heroGoatImg ?? siteContent.heroImageGoat,
@@ -92,6 +98,8 @@ export const SiteContentProvider: React.FC<{ children: ReactNode }> = ({ childre
     <SiteContentContext.Provider
       value={{
         logoUrl: siteContent.logoUrl,
+        heroBgUrl: siteContent.heroBgUrl || siteContent.hero_bg_url,
+        hero_bg_url: siteContent.heroBgUrl || siteContent.hero_bg_url,
         heroImageCow: siteContent.heroImageCow || siteContent.heroCowImg,
         heroImageGoat: siteContent.heroImageGoat || siteContent.heroGoatImg,
         heroImageBird: siteContent.heroImageBird || siteContent.heroPoultryImg,
