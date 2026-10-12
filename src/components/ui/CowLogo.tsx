@@ -49,6 +49,11 @@ export const CowLogo: React.FC<CowLogoProps> = ({
         <img
           src={activeLogoUrl}
           alt={alt}
+          width="48"
+          height="48"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
           onError={() => setImgError(true)}
           className={`w-full h-full object-cover rounded-full ${imageClassName}`}
           referrerPolicy="no-referrer"

@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 export interface AdminAuthUser {
@@ -42,14 +42,11 @@ export function isUserAuthorizedAdmin(user: AdminAuthUser | null): boolean {
     }
   }
 
-  // If no specific role metadata or email restriction is provided,
-  // any pre-provisioned user in the dedicated Supabase Auth pool is authorized.
   return true;
 }
 
 /**
- * Sign in admin using Supabase Auth (Email + Password) ONLY.
- * No localStorage mock fallback. If Supabase rejects credentials, login fails.
+ * Sign in admin directly using Supabase Auth (Email + Password).
  */
 export async function signInAdmin(email: string, pass: string): Promise<AdminAuthUser> {
   const cleanEmail = email.trim().toLowerCase();
@@ -59,13 +56,7 @@ export async function signInAdmin(email: string, pass: string): Promise<AdminAut
     throw new Error('ইমেইল এবং পাসওয়ার্ড দুটিই পূরণ করা আবশ্যক!');
   }
 
-  if (!isSupabaseConfigured()) {
-    throw new Error(
-      'Supabase কনফিগারেশন পাওয়া যায়নি! অনুগ্রহ করে হোস্টিং এনভায়রনমেন্টে VITE_SUPABASE_URL এবং VITE_SUPABASE_ANON_KEY যোগ করুন।'
-    );
-  }
-
-  console.log('[DEBUG Auth] Attempting signInWithPassword for email:', JSON.stringify(cleanEmail));
+  console.log('[Auth] Attempting signInWithPassword for:', cleanEmail);
 
   let data: any = null;
   let error: any = null;
@@ -78,37 +69,31 @@ export async function signInAdmin(email: string, pass: string): Promise<AdminAut
     data = res.data;
     error = res.error;
   } catch (err: any) {
-    console.error('[Supabase Auth] signInWithPassword exception:', err);
     error = err;
   }
 
   if (error) {
     console.error('[Supabase Auth] signInWithPassword error:', error);
 
-    const rawMsg = error.message || 'Unknown Supabase error';
+    const rawMsg = error.message || String(error) || 'Unknown error';
 
+    // Show real error message in console and in small readable Bangla message
     if (rawMsg.toLowerCase().includes('invalid login credentials')) {
-      throw new Error(
-        `ভুল ইমেইল বা পাসওয়ার্ড! (Supabase: "${rawMsg}")। অনুগ্রহ করে সঠিক তথ্য দিয়ে পুনরায় চেষ্টা করুন।`
-      );
+      throw new Error(`ভুল ইমেইল বা পাসওয়ার্ড (${rawMsg})`);
     }
 
     if (rawMsg.toLowerCase().includes('email not confirmed')) {
-      throw new Error(
-        `ইমেইল এখনও ভেরিফাই করা হয়নি (Supabase: "${rawMsg}")। অনুগ্রহ করে Supabase ড্যাশবোর্ডে Authentication > Users এ গিয়ে এই ইমেইল Confirm করুন।`
-      );
+      throw new Error(`ইমেইল কনফার্ম করা হয়নি (${rawMsg})`);
     }
 
     if (rawMsg.toLowerCase().includes('failed to fetch') || rawMsg.toLowerCase().includes('network')) {
-      throw new Error(
-        `সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি (Supabase: "${rawMsg}")। ইন্টারনেট সংযোগ, CORS বা Supabase URL কনফিগারেশন যাচাই করুন।`
-      );
+      throw new Error(`সার্ভার কানেকশন ত্রুটি (${rawMsg})`);
     }
 
-    throw new Error(`লগইন ব্যর্থ হয়েছে (Supabase): ${rawMsg}`);
+    throw new Error(`লগইন ব্যর্থ হয়েছে (${rawMsg})`);
   }
 
-  if (!data.user) {
+  if (!data?.user) {
     throw new Error('ব্যবহারকারী পাওয়া যায়নি।');
   }
 
@@ -129,30 +114,23 @@ export async function signInAdmin(email: string, pass: string): Promise<AdminAut
 }
 
 /**
- * Sign out current admin session from Supabase Auth.
+ * Sign out current admin session.
  */
 export async function signOutAdmin(): Promise<void> {
-  if (isSupabaseConfigured()) {
-    try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.warn('Supabase signOut notice:', err);
-    }
+  try {
+    await supabase.auth.signOut();
+  } catch (err) {
+    console.error('Supabase signOut error:', err);
   }
 }
 
 /**
  * Get the currently authenticated Supabase user.
- * Validates real Supabase session with zero localStorage mock.
  */
 export async function getCurrentAdminUser(): Promise<AdminAuthUser | null> {
-  if (!isSupabaseConfigured()) {
-    return null;
-  }
-
   try {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) {
+    if (error || !data?.user) {
       return null;
     }
 
@@ -169,22 +147,17 @@ export async function getCurrentAdminUser(): Promise<AdminAuthUser | null> {
 
     return authUser;
   } catch (err) {
-    console.warn('Error fetching current admin user:', err);
+    console.error('Error fetching current admin user:', err);
     return null;
   }
 }
 
 /**
- * Subscribe to real Supabase Auth State changes.
+ * Subscribe to Supabase Auth State changes.
  */
 export function onAdminAuthStateChange(
   callback: (event: AuthChangeEvent, session: Session | null, user: AdminAuthUser | null) => void
 ): () => void {
-  if (!isSupabaseConfigured()) {
-    callback('INITIAL_SESSION' as AuthChangeEvent, null, null);
-    return () => {};
-  }
-
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
     let user: AdminAuthUser | null = session?.user
       ? {

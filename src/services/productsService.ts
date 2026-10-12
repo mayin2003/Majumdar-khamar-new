@@ -55,8 +55,42 @@ export function mapProductToDb(product: Partial<Product>): Record<string, any> {
   return dbRecord;
 }
 
-// In-memory cache for fast responsive UI
-let cachedProducts: Product[] = [...initialProducts];
+// In-memory + sessionStorage cache (stale-while-revalidate, ~5 min TTL) for fast responsive UI
+const PRODUCTS_CACHE_KEY = 'mk_products_cache_v1';
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+function readSessionStorageCache(): Product[] | null {
+  try {
+    if (typeof window === 'undefined' || !window.sessionStorage) return null;
+    const raw = window.sessionStorage.getItem(PRODUCTS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - (parsed.timestamp || 0) < CACHE_TTL_MS && Array.isArray(parsed.data)) {
+      return parsed.data;
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return null;
+}
+
+function writeSessionStorageCache(data: Product[]) {
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.setItem(
+        PRODUCTS_CACHE_KEY,
+        JSON.stringify({ timestamp: Date.now(), data })
+      );
+    }
+  } catch {
+    // Ignore storage quota errors
+  }
+}
+
+// Columns needed for product listings and category cards (omitting unnecessary heavy columns)
+const PRODUCT_COLUMNS = 'id,name,category,age,weight,breed,gender,health_status,description,images,in_stock,is_limited,slug,is_demo,created_at,updated_at';
+
+let cachedProducts: Product[] = readSessionStorageCache() || [...initialProducts];
 const listeners = new Set<(products: Product[]) => void>();
 
 function notifyListeners() {
@@ -69,7 +103,7 @@ function notifyListeners() {
 }
 
 /**
- * Fetch all informational products from Supabase
+ * Fetch all informational products from Supabase with column projection & SWR caching
  */
 export async function getProducts(): Promise<Product[]> {
   if (!isSupabaseConfigured()) {
@@ -80,7 +114,7 @@ export async function getProducts(): Promise<Product[]> {
   try {
     const { data, error } = await supabase
       .from('products')
-      .select('*')
+      .select(PRODUCT_COLUMNS)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -90,6 +124,7 @@ export async function getProducts(): Promise<Product[]> {
 
     if (data) {
       cachedProducts = data.map(mapDbToProduct);
+      writeSessionStorageCache(cachedProducts);
       notifyListeners();
     }
     return cachedProducts;
@@ -100,16 +135,52 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 /**
- * Fetch products by category
+ * Fetch products by category with server-level category filtering
  */
 export async function getProductsByCategory(category: ProductCategory | 'সব'): Promise<Product[]> {
-  const all = await getProducts();
-  if (category === 'সব') return all;
-  return all.filter((p) => p.category === category);
+  if (category === 'সব') {
+    return getProducts();
+  }
+
+  if (!isSupabaseConfigured()) {
+    return cachedProducts.filter((p) => p.category === category);
+  }
+
+  try {
+    let query = supabase
+      .from('products')
+      .select(PRODUCT_COLUMNS);
+
+    if (category === 'মুরগি ও হাঁস') {
+      query = query.or('category.eq.মুরগি ও হাঁস,category.eq.মুরগি,category.eq.হাঁস');
+    } else {
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (!error && data) {
+      const categoryAnimals = data.map(mapDbToProduct);
+      // Merge with in-memory cache to keep state synced
+      const otherCategoryAnimals = cachedProducts.filter((p) => p.category !== category);
+      cachedProducts = [...categoryAnimals, ...otherCategoryAnimals];
+      writeSessionStorageCache(cachedProducts);
+      notifyListeners();
+      return categoryAnimals;
+    }
+  } catch (err: any) {
+    console.warn('[Supabase] Category query fallback to local cache:', err?.message || err);
+  }
+
+  return cachedProducts.filter((p) => {
+    if (category === 'মুরগি ও হাঁস') {
+      return p.category === 'মুরগি ও হাঁস' || (p.category as string) === 'মুরগি' || (p.category as string) === 'হাঁস';
+    }
+    return p.category === category;
+  });
 }
 
 /**
- * Fetch a single product by slug
+ * Fetch a single product by slug with selected columns
  */
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
   if (!slug) return undefined;
@@ -119,14 +190,15 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select(PRODUCT_COLUMNS)
         .or(`slug.eq.${slug},slug.eq.${decoded},id.eq.${slug}`)
         .maybeSingle();
 
       if (error) {
         console.warn('[Supabase] Live product by slug notice:', error.message || error);
       } else if (data) {
-        return mapDbToProduct(data);
+        const mapped = mapDbToProduct(data);
+        return mapped;
       }
     } catch (err: any) {
       console.warn('[Supabase] Exception fetching product by slug (fallback to cache):', err?.message || err);

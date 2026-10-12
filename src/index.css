@@ -1,33 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Noto Sans Bengali', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-bengali: 'Noto Sans Bengali', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
+  --font-bengali: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
+  --font-headline: 'Anek Bangla', 'Hind Siliguri', sans-serif;
+  --font-body: 'Hind Siliguri', sans-serif;
+  --font-handwritten: 'Galada', cursive;
   
-  --color-farm-dark: #1a3a2a;
-  --color-farm-darker: #0f2a1c;
+  --color-farm-dark: #0b3d2b;
+  --color-farm-mid: #14803c;
+  --color-farm-gold: #f2b705;
+  --color-farm-cream: #f8f7e6;
   --color-farm-accent: #c0522d;
-  --color-farm-cream: #f5efe0;
-  --color-farm-cream-light: #faf7f0;
-  --color-farm-olive: #7d8c58;
-  --color-farm-gold: #b3924c;
 }
 
 @layer base {
   html {
-    font-family: var(--font-bengali);
+    font-family: var(--font-body);
     scroll-behavior: smooth;
   }
   
   body {
-    background-color: #f5efe0;
-    color: #1a3a2a;
+    background-color: #f8f7e6;
+    color: #0b3d2b;
+    font-family: var(--font-body);
     font-feature-settings: "kern" 1;
     text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-bengali);
+    font-family: var(--font-headline);
     font-weight: 700;
     line-height: 1.35;
   }
@@ -66,6 +68,16 @@
 
 .cta-pulse {
   animation: ctaPulse 2.8s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* Accessibility: Respect user prefers-reduced-motion setting */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 

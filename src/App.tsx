@@ -18,13 +18,17 @@ import { FloatingWhatsApp } from './components/ui/FloatingWhatsApp';
 import { SupabaseConfigBanner } from './components/ui/SupabaseConfigBanner';
 
 import { HomePage } from './pages/HomePage';
-import { ProductsPage } from './pages/ProductsPage';
-import { CategoryDetailPage } from './pages/CategoryDetailPage';
-import { ProductInfoDetailPage } from './pages/ProductInfoDetailPage';
 import { SaleProductsPage } from './pages/SaleProductsPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
+
+import { AnimalCardSkeleton, ProductsPageSkeleton } from './components/ui/SkeletonLoaders';
+
+// Performance optimization: code-split Products, Category, and Info Detail pages with React.lazy
+const ProductsPage = React.lazy(() => import('./pages/ProductsPage').then(m => ({ default: m.ProductsPage })));
+const CategoryDetailPage = React.lazy(() => import('./pages/CategoryDetailPage').then(m => ({ default: m.CategoryDetailPage })));
+const ProductInfoDetailPage = React.lazy(() => import('./pages/ProductInfoDetailPage').then(m => ({ default: m.ProductInfoDetailPage })));
 
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
 import { AdminLayout } from './pages/admin/AdminLayout';
@@ -58,6 +62,31 @@ function PublicLayout() {
   );
 }
 
+// Fallback skeleton container for lazy routes
+function PageSuspenseFallback({ type }: { type: 'products' | 'category' | 'detail' }) {
+  if (type === 'products') {
+    return (
+      <div className="w-full min-h-screen bg-[#F5F0E3] pt-12 pb-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto mb-16 text-center space-y-4">
+          <div className="h-6 w-44 bg-[#e6dece] rounded-full mx-auto animate-pulse" />
+          <div className="h-10 w-72 bg-[#e6dece] rounded-lg mx-auto animate-pulse" />
+        </div>
+        <ProductsPageSkeleton />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full min-h-screen bg-[#F5F0E3] pt-12 pb-24 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        {[1, 2, 3].map((n) => (
+          <AnimalCardSkeleton key={n} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Main Application Routes
 function AppRoutes() {
   const location = useLocation();
@@ -68,9 +97,30 @@ function AppRoutes() {
         {/* Public Website Routes */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/products/:category" element={<CategoryDetailPage />} />
-          <Route path="/products/:category/:slug" element={<ProductInfoDetailPage />} />
+          <Route
+            path="/products"
+            element={
+              <React.Suspense fallback={<PageSuspenseFallback type="products" />}>
+                <ProductsPage />
+              </React.Suspense>
+            }
+          />
+          <Route
+            path="/products/:category"
+            element={
+              <React.Suspense fallback={<PageSuspenseFallback type="category" />}>
+                <CategoryDetailPage />
+              </React.Suspense>
+            }
+          />
+          <Route
+            path="/products/:category/:slug"
+            element={
+              <React.Suspense fallback={<PageSuspenseFallback type="detail" />}>
+                <ProductInfoDetailPage />
+              </React.Suspense>
+            }
+          />
           <Route path="/sale-products" element={<SaleProductsPage />} />
           <Route path="/sale-products/:slug" element={<ProductDetailPage />} />
           <Route path="/sales" element={<SaleProductsPage />} />

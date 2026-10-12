@@ -76,7 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(null);
       setError(null);
     } catch (err: any) {
-      console.error('Logout error:', err);
+      console.warn('Logout notice:', err);
       setUser(null);
     }
   };

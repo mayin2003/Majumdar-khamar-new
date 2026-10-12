@@ -84,6 +84,7 @@ export const FarmPhotoSplitSection: React.FC = () => {
                 alt="মজুমদার খামার প্রাকৃতিক শেড ও পরিবেশ - উত্তর রাজেশপুর, পরশুরাম, ফেনী"
                 className="w-full h-full object-cover"
                 loading="lazy"
+                decoding="async"
                 referrerPolicy="no-referrer"
               />
               {/* Subtle sunlight vignette */}

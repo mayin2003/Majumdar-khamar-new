@@ -9,13 +9,10 @@ export const HomePage: React.FC = () => {
   return (
     <PageTransition>
       <div id="home-page-root" className="w-full flex flex-col">
-        {/* SECTION 1 — HERO */}
+        {/* SECTION 1 — HERO WITH 3 TILTED CARDS & WAVY BOTTOM STATS BAND */}
         <HeroSection />
 
-        {/* SECTION 2 — FEATURE STRIP */}
-        <FeatureStrip />
-
-        {/* SECTION 3 — FARM PHOTO SPLIT SECTION */}
+        {/* SECTION 2 — FARM PHOTO SPLIT SECTION */}
         <FarmPhotoSplitSection />
 
         {/* SECTION 4 — WHY CHOOSE US */}

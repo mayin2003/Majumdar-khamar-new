@@ -38,7 +38,7 @@ export const AdminLayout: React.FC = () => {
       await logout();
       navigate('/admin/login', { replace: true });
     } catch (err) {
-      console.error('Logout error:', err);
+      console.warn('Logout notice:', err);
     }
   };
 
@@ -68,26 +68,22 @@ export const AdminLayout: React.FC = () => {
     {
       to: '/admin/dashboard',
       label: 'ড্যাশবোর্ড',
-      icon: LayoutDashboard,
-      badge: null
+      icon: LayoutDashboard
     },
     {
       to: '/admin/home',
       label: 'হোম কনটেন্ট',
-      icon: Home,
-      badge: null
+      icon: Home
     },
     {
       to: '/admin/products',
-      label: 'প্রোডাক্টস (তথ্য)',
-      icon: Package,
-      badge: 'তথ্য'
+      label: 'প্রোডাক্টস',
+      icon: Package
     },
     {
       to: '/admin/sales',
       label: 'বিক্রয় পণ্য',
-      icon: ShoppingBag,
-      badge: 'মূল্যসহ'
+      icon: ShoppingBag
     }
   ];
 
@@ -115,7 +111,7 @@ export const AdminLayout: React.FC = () => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-colors ${
+                  `flex items-center px-3.5 py-2.5 rounded-xl font-medium text-sm transition-colors ${
                     isActive
                       ? 'bg-[#003F2D] text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -126,11 +122,6 @@ export const AdminLayout: React.FC = () => {
                   <Icon className="w-4 h-4 shrink-0" />
                   <span>{item.label}</span>
                 </div>
-                {item.badge && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/20 text-inherit font-semibold">
-                    {item.badge}
-                  </span>
-                )}
               </NavLink>
             );
           })}
@@ -225,11 +216,6 @@ export const AdminLayout: React.FC = () => {
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
                   </div>
-                  {item.badge && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20">
-                      {item.badge}
-                    </span>
-                  )}
                 </NavLink>
               );
             })}

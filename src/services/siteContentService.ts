@@ -77,7 +77,41 @@ export function mapSiteContentToDb(data: Partial<SiteHomeContent>): Record<strin
   return dbRecord;
 }
 
-let cachedSiteContent: SiteHomeContent = { ...defaultHomeContent };
+// In-memory + sessionStorage cache (stale-while-revalidate, ~5 min TTL)
+const SITE_CONTENT_CACHE_KEY = 'mk_site_content_cache_v1';
+const SITE_CONTENT_TTL_MS = 5 * 60 * 1000;
+
+function readSiteContentSessionCache(): SiteHomeContent | null {
+  try {
+    if (typeof window === 'undefined' || !window.sessionStorage) return null;
+    const raw = window.sessionStorage.getItem(SITE_CONTENT_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - (parsed.timestamp || 0) < SITE_CONTENT_TTL_MS && parsed.data) {
+      return parsed.data;
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return null;
+}
+
+function writeSiteContentSessionCache(data: SiteHomeContent) {
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.setItem(
+        SITE_CONTENT_CACHE_KEY,
+        JSON.stringify({ timestamp: Date.now(), data })
+      );
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+const SITE_CONTENT_COLUMNS = 'id,logo_url,hero_image_cow,hero_image_goat,hero_image_bird,farm_photo_url,headline,tagline,hero_paragraph,location,farm_section_heading,farm_section_paragraph,whatsapp_number,address,phone,updated_at';
+
+let cachedSiteContent: SiteHomeContent = readSiteContentSessionCache() || { ...defaultHomeContent };
 const listeners = new Set<(data: SiteHomeContent) => void>();
 
 function notifyListeners() {
@@ -96,7 +130,7 @@ export async function getSiteContent(): Promise<SiteHomeContent> {
   try {
     const { data, error } = await supabase
       .from('site_content')
-      .select('*')
+      .select(SITE_CONTENT_COLUMNS)
       .eq('id', 'home')
       .maybeSingle();
 
@@ -107,6 +141,7 @@ export async function getSiteContent(): Promise<SiteHomeContent> {
 
     if (data) {
       cachedSiteContent = mapDbToSiteContent(data);
+      writeSiteContentSessionCache(cachedSiteContent);
       notifyListeners();
     }
     return cachedSiteContent;

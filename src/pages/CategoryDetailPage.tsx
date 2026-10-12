@@ -170,9 +170,18 @@ export const CategoryDetailPage: React.FC = () => {
         {/* 3. GRID OF ANIMALS (PURELY INFORMATIONAL - NO PRICES, NO ORDER BUTTONS) */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mb-14 sm:mb-20">
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center gap-3 text-[#1a3a2a]">
-              <div className="w-10 h-10 border-4 border-[#003F2D] border-t-transparent rounded-full animate-spin" />
-              <p className="font-bold text-sm">তথ্য লোড হচ্ছে...</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <div key={n} className="bg-white rounded-[22px] border border-[#e6dece] shadow-md flex flex-col overflow-hidden text-left h-full animate-pulse">
+                  <div className="w-full aspect-[4/3] bg-[#e6dece]" />
+                  <div className="p-5 sm:p-6 space-y-3">
+                    <div className="h-6 bg-[#e6dece] rounded-md w-3/4" />
+                    <div className="h-4 bg-[#e6dece]/60 rounded-md w-1/2" />
+                    <div className="h-4 bg-[#e6dece]/40 rounded-md w-full" />
+                    <div className="h-9 bg-[#e6dece] rounded-full w-full mt-4" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : categoryProducts.length === 0 ? (
             /* EMPTY STATE */
@@ -207,8 +216,6 @@ export const CategoryDetailPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
               {categoryProducts.map((product, index) => {
                 const mainImage = product.images && product.images.length > 0 ? product.images[0] : farmBgPhoto;
-                
-                // Purely informational category flow: always links to /products/[category]/[slug]
                 const targetLink = `/products/${categoryInfo.urlSlug}/${product.slug}`;
 
                 return (
@@ -219,7 +226,7 @@ export const CategoryDetailPage: React.FC = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: index * 0.08, ease: 'easeOut' }}
                     whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                    className="bg-white rounded-[22px] border border-[#e6dece] shadow-md hover:shadow-xl hover:border-[#003F2D]/40 transition-all duration-300 flex flex-col overflow-hidden text-left h-full group"
+                    className="bg-white rounded-[22px] border border-[#e6dece] shadow-md hover:shadow-xl hover:border-[#003F2D]/40 transition-all duration-300 flex flex-col overflow-hidden text-left h-full group will-change-transform"
                   >
                     <Link to={targetLink} className="block flex flex-col h-full">
                       {/* 1. Product Image (rounded-xl, aspect ~4:3) with status badge top-left */}
@@ -229,10 +236,11 @@ export const CategoryDetailPage: React.FC = () => {
                           alt={product.name}
                           className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                           loading="lazy"
+                          decoding="async"
                           referrerPolicy="no-referrer"
                         />
 
-                        {/* Status badge top-left: green "স্টকে আছে" if inStock, orange "সীমিত সংখ্যক" if isLimited */}
+                        {/* Status badge top-left */}
                         <div className="absolute top-3.5 left-3.5 z-10">
                           {product.isLimited ? (
                             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#EA580C] text-white text-xs font-bold shadow-md">
@@ -250,7 +258,7 @@ export const CategoryDetailPage: React.FC = () => {
                           )}
                         </div>
 
-                        {/* Small breed tag (e.g. "দেশি", "শাহিওয়াল") top-right */}
+                        {/* Small breed tag top-right */}
                         <div className="absolute top-3.5 right-3.5 z-10">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/95 text-[#003F2D] text-xs font-bold shadow-md border border-[#D6A21D]/40">
                             <span>{product.breed || product.category}</span>
@@ -281,7 +289,7 @@ export const CategoryDetailPage: React.FC = () => {
                           )}
                         </div>
 
-                        {/* 4. Small neutral outlined button at the bottom: white bg, thin dark-green border, dark-green text "বিস্তারিত দেখুন" */}
+                        {/* 4. Small neutral outlined button at the bottom */}
                         <div className="pt-3 border-t border-[#f0e8dc] mt-auto">
                           <div className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white group-hover:bg-[#FAF7EE] text-[#003F2D] border border-[#003F2D] font-bold text-sm shadow-xs transition-all duration-200 text-center">
                             <span>বিস্তারিত দেখুন</span>

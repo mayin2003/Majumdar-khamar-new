@@ -1,8 +1,77 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Lock, Mail, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, AlertCircle, ArrowRight, ShieldCheck, RotateCw } from 'lucide-react';
 import { CowLogo } from '../../components/ui/CowLogo';
+
+type LoginErrorType = 'network' | 'credentials' | 'unconfirmed' | 'generic';
+
+interface LoginErrorState {
+  type: LoginErrorType;
+  message: string;
+}
+
+function classifyError(err: any): LoginErrorState {
+  const rawMsg = (err?.message || String(err) || '').toLowerCase();
+  const rawName = (err?.name || '').toLowerCase();
+  const status = err?.status || err?.statusCode;
+
+  // 1. Invalid credentials
+  if (
+    rawMsg.includes('invalid login credentials') ||
+    rawMsg.includes('invalid credentials') ||
+    rawMsg.includes('invalid_grant') ||
+    rawMsg.includes('ভুল ইমেইল বা পাসওয়ার্ড') ||
+    err?.code === 'invalid_credentials'
+  ) {
+    return {
+      type: 'credentials',
+      message: 'ইমেইল বা পাসওয়ার্ড ভুল।',
+    };
+  }
+
+  // 2. Email not confirmed
+  if (
+    rawMsg.includes('email not confirmed') ||
+    rawMsg.includes('email_not_confirmed') ||
+    rawMsg.includes('ইমেইল কনফার্ম') ||
+    err?.code === 'email_not_confirmed'
+  ) {
+    return {
+      type: 'unconfirmed',
+      message: 'ইমেইল কনফার্ম করা হয়নি।',
+    };
+  }
+
+  // 3. Network / fetch failure
+  if (
+    rawMsg.includes('failed to fetch') ||
+    rawMsg.includes('network') ||
+    rawMsg.includes('networkerror') ||
+    rawMsg.includes('load failed') ||
+    rawMsg.includes('connection') ||
+    rawMsg.includes('unreachable') ||
+    rawMsg.includes('সার্ভার কানেকশন ত্রুটি') ||
+    rawMsg.includes('econnrefused') ||
+    rawMsg.includes('enotfound') ||
+    rawName === 'typeerror' ||
+    status === 0 ||
+    status === 502 ||
+    status === 503 ||
+    status === 504
+  ) {
+    return {
+      type: 'network',
+      message: 'ইন্টারনেট বা সার্ভারের সমস্যা। একটু পরে আবার চেষ্টা করুন।',
+    };
+  }
+
+  // 4. Fallback / generic error
+  return {
+    type: 'generic',
+    message: err?.message || 'লগইন করতে ব্যর্থ হয়েছে। আবার চেষ্টা করুন।',
+  };
+}
 
 export const AdminLoginPage: React.FC = () => {
   const { login, error, clearError, isAuthenticated } = useAuth();
@@ -11,7 +80,7 @@ export const AdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<LoginErrorState | null>(null);
 
   // If already authenticated with a valid Supabase session, redirect directly to admin dashboard
   React.useEffect(() => {
@@ -20,26 +89,59 @@ export const AdminLoginPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const executeLogin = async () => {
     setLocalError(null);
     clearError();
 
-    if (!email.trim() || !password.trim()) {
-      setLocalError('অনুগ্রহ করে ইমেইল এবং পাসওয়ার্ড দুটিই পূরণ করুন।');
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+
+    if (!cleanEmail || !cleanPassword) {
+      setLocalError({
+        type: 'generic',
+        message: 'অনুগ্রহ করে ইমেইল এবং পাসওয়ার্ড দুটিই পূরণ করুন।',
+      });
       return;
     }
 
     setIsLoading(true);
+
     try {
-      await login(email, password);
+      // First attempt
+      await login(cleanEmail, cleanPassword);
       navigate('/admin/dashboard', { replace: true });
-    } catch (err: any) {
-      setLocalError(err.message || 'লগইন করতে ব্যর্থ হয়েছে। আবার চেষ্টা করুন।');
+    } catch (firstErr: any) {
+      // Always console.error the real error
+      console.error('[Admin Login] Supabase auth error:', firstErr);
+      const classified = classifyError(firstErr);
+
+      // Before showing a network error, retry the request once automatically
+      if (classified.type === 'network') {
+        try {
+          // Automatic retry once
+          await new Promise((res) => setTimeout(res, 800));
+          await login(cleanEmail, cleanPassword);
+          navigate('/admin/dashboard', { replace: true });
+          return;
+        } catch (retryErr: any) {
+          console.error('[Admin Login] Supabase auth auto-retry error:', retryErr);
+          const retryClassified = classifyError(retryErr);
+          setLocalError(retryClassified);
+        }
+      } else {
+        setLocalError(classified);
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await executeLogin();
+  };
+
+  const activeError = localError || (error ? classifyError({ message: error }) : null);
 
   return (
     <div className="min-h-screen bg-[#F4F6F4] flex flex-col justify-center items-center px-4 py-12">
@@ -63,12 +165,23 @@ export const AdminLoginPage: React.FC = () => {
           </div>
 
           {/* Error Message */}
-          {(localError || error) && (
+          {activeError && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3 text-red-700 text-sm">
               <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="font-semibold">লগইন ব্যর্থ হয়েছে</p>
-                <p className="text-xs mt-0.5">{localError || error}</p>
+                <p className="text-xs mt-0.5">{activeError.message}</p>
+                {activeError.type === 'network' && (
+                  <button
+                    type="button"
+                    onClick={() => executeLogin()}
+                    disabled={isLoading}
+                    className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-800 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <RotateCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                    <span>আবার চেষ্টা করুন (Retry)</span>
+                  </button>
+                )}
               </div>
             </div>
           )}

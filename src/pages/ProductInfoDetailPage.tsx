@@ -86,10 +86,27 @@ export const ProductInfoDetailPage: React.FC = () => {
 
   if (loading || !currentProduct) {
     return (
-      <div className="min-h-screen bg-[#f5efe0] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-[#1a3a2a]">
-          <div className="w-10 h-10 border-4 border-[#1a3a2a] border-t-transparent rounded-full animate-spin" />
-          <p className="font-bold text-sm">তথ্য লোড হচ্ছে...</p>
+      <div className="min-h-screen bg-[#f5efe0] pt-10 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 animate-pulse">
+          <div className="lg:col-span-7 space-y-4">
+            <div className="w-full aspect-[4/3] bg-[#e6dece] rounded-2xl" />
+            <div className="grid grid-cols-3 gap-3">
+              <div className="aspect-[4/3] bg-[#e6dece] rounded-lg" />
+              <div className="aspect-[4/3] bg-[#e6dece] rounded-lg" />
+              <div className="aspect-[4/3] bg-[#e6dece] rounded-lg" />
+            </div>
+          </div>
+          <div className="lg:col-span-5 space-y-4">
+            <div className="h-6 w-32 bg-[#e6dece] rounded-full" />
+            <div className="h-10 w-3/4 bg-[#e6dece] rounded-lg" />
+            <div className="h-4 w-full bg-[#e6dece] rounded" />
+            <div className="space-y-3 pt-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-8 bg-[#e6dece] rounded" />
+              ))}
+            </div>
+            <div className="h-12 w-full bg-[#e6dece] rounded-full mt-6" />
+          </div>
         </div>
       </div>
     );
@@ -163,6 +180,8 @@ export const ProductInfoDetailPage: React.FC = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    loading="eager"
+                    decoding="async"
                     className="w-full h-full object-cover object-center"
                     referrerPolicy="no-referrer"
                   />
@@ -413,7 +432,7 @@ export const ProductInfoDetailPage: React.FC = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.35, delay: index * 0.1 }}
                     whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                    className="bg-white rounded-[20px] border border-[#e8dfce] shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden text-left"
+                    className="bg-white rounded-[20px] border border-[#e8dfce] shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden text-left will-change-transform"
                   >
                     <Link to={linkTarget} className="block group">
                       <div className="relative w-full h-48 sm:h-52 bg-[#ebe2d3] overflow-hidden">
@@ -422,6 +441,7 @@ export const ProductInfoDetailPage: React.FC = () => {
                           alt={item.name}
                           className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                           loading="lazy"
+                          decoding="async"
                           referrerPolicy="no-referrer"
                         />
                         <div className="absolute top-3 right-3 z-10">
